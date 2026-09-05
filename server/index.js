@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const connectDb = require("./config/db");
 const expenseRoutes = require("./routes/expenseRoutes");
+const authRoutes = require("./routes/authRoutes");
 const dns = require("node:dns");
 
 dotenv.config();
@@ -9,16 +10,18 @@ dotenv.config();
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 const app = express();
 
+//Middleware
 app.use(express.json());
 
+//Routes
 app.use("/api/expenses", expenseRoutes);
+app.use("/api/auth", authRoutes);
 
+//Start the server
 const PORT = process.env.PORT || 8080;
-
 const startServer = async () => {
   try {
     await connectDb();
-
     app.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
     });
