@@ -4,6 +4,8 @@ const connectDb = require("./config/db");
 const expenseRoutes = require("./routes/expenseRoutes");
 const authRoutes = require("./routes/authRoutes");
 const accountRoutes = require("./routes/accountRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const budgetRoutes = require("./routes/budgetRoutes");
 const dns = require("node:dns");
 
 dotenv.config();
@@ -18,7 +20,8 @@ app.use(express.json());
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/accounts", accountRoutes);
-
+app.use("/api/categories", categoryRoutes);
+app.use("/api/budgets", budgetRoutes);
 //Start the server
 const PORT = process.env.PORT || 8080;
 const startServer = async () => {
