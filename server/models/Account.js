@@ -21,7 +21,7 @@ const accountSchema = new mongoose.Schema(
       required: true,
     },
 
-    initialBalance: {
+    balance: {
       type: mongoose.Schema.Types.Decimal128,
       required: true,
       default: 0,

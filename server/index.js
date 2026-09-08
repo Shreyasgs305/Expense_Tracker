@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const connectDb = require("./config/db");
 const expenseRoutes = require("./routes/expenseRoutes");
 const authRoutes = require("./routes/authRoutes");
+const accountRoutes = require("./routes/accountRoutes");
 const dns = require("node:dns");
 
 dotenv.config();
@@ -16,6 +17,7 @@ app.use(express.json());
 //Routes
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/accounts", accountRoutes);
 
 //Start the server
 const PORT = process.env.PORT || 8080;
