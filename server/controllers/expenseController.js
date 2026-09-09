@@ -230,7 +230,7 @@ const createExpense = async (req, res) => {
     // 7. Verify account belongs to logged-in user
     const accountData = await Account.findOne({
       _id: account,
-      user: userId,
+      userId: userId,
     });
 
     if (!accountData) {

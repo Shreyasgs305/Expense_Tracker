@@ -6,7 +6,7 @@ const {
   updateCategory,
   deleteCategory,
 } = require("../controllers/categoryController");
-const authMiddleware = require("../middleware/authMiddleware");
+const authMiddleware = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 

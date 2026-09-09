@@ -6,6 +6,8 @@ const authRoutes = require("./routes/authRoutes");
 const accountRoutes = require("./routes/accountRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const budgetRoutes = require("./routes/budgetRoutes");
+const reportRoutes = require("./routes/reportRoutes");
+
 const dns = require("node:dns");
 
 dotenv.config();
@@ -22,6 +24,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/accounts", accountRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/budgets", budgetRoutes);
+app.use("/api/reports", reportRoutes);
+
 //Start the server
 const PORT = process.env.PORT || 8080;
 const startServer = async () => {

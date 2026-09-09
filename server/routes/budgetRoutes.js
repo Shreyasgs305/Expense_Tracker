@@ -6,9 +6,10 @@ const {
   createBudget,
   updateBudget,
   deleteBudget,
+  getBudgetStatus,
 } = require("../controllers/budgetController");
 
-const authMiddleware = require("../middleware/authMiddleware");
+const authMiddleware = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
