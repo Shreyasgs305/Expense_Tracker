@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
     const userResponse = await getMe();
 
     setUser(userResponse.data);
-
+    console.log(response);
     return response;
   };
 
