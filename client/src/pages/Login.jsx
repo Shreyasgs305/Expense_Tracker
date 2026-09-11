@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    console.log("🔥 LOGIN BUTTON CLICKED");
     setError("");
 
     if (!email || !password) {
@@ -25,9 +25,16 @@ const Login = () => {
     try {
       setLoading(true);
 
-      await login(email, password);
+      console.log("1. Login started");
+
+      const response = await login(email, password);
+
+      console.log("2. Login successful:", response);
+
+      console.log("3. Navigating to dashboard");
 
       navigate("/dashboard");
+      console.log("4. Navigate called");
     } catch (error) {
       console.error("Login error:", error);
 

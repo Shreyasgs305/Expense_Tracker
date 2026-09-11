@@ -1,20 +1,18 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
+
 import {
   register as registerApi,
   login as loginApi,
   getMe,
 } from "../api/authApi";
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // =========================
   // CHECK LOGGED-IN USER
-  // =========================
-
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -27,7 +25,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const response = await getMe();
 
-        setUser(response.data);
+        setUser(response.user);
       } catch (error) {
         console.error("Get current user error:", error);
 
@@ -41,41 +39,34 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  // =========================
   // LOGIN
-  // =========================
-
   const login = async (email, password) => {
     const response = await loginApi({
       email,
       password,
     });
 
-    // Save JWT
+    console.log("LOGIN RESPONSE:", response);
+
     localStorage.setItem("token", response.token);
 
-    // Get logged-in user
     const userResponse = await getMe();
 
-    setUser(userResponse.data);
-    console.log(response);
+    console.log("ME RESPONSE:", userResponse);
+
+    setUser(userResponse.user);
+
     return response;
   };
 
-  // =========================
   // REGISTER
-  // =========================
-
   const register = async (data) => {
     const response = await registerApi(data);
 
     return response;
   };
 
-  // =========================
   // LOGOUT
-  // =========================
-
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
@@ -94,12 +85,4 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-};
-
-// =========================
-// CUSTOM HOOK
-// =========================
-
-export const useAuth = () => {
-  return useContext(AuthContext);
 };
