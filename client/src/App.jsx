@@ -4,10 +4,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
-
+import Accounts from "./pages/Accounts";
 // Temporary pages
 
-const Accounts = () => <h1>Accounts</h1>;
 const Expenses = () => <h1>Expenses</h1>;
 const AddExpense = () => <h1>Add Expense</h1>;
 const Categories = () => <h1>Categories</h1>;
