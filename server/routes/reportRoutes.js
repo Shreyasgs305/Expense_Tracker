@@ -1,22 +1,52 @@
 const express = require("express");
 
-const {
-  getDashboard,
-  getSummary,
-  getCategoryReport,
-  getMonthlyReport,
-  getAccountReport,
-  getTrendsReport,
-} = require("../controllers/reportController");
+const router = express.Router();
 
 const authMiddleware = require("../middlewares/authMiddleware");
 
-const router = express.Router();
+const {
+  getDashboard,
+  getSummary,
+  getCategory,
+  getMonthly,
+  getAccount,
+  getTrends,
+} = require("../controllers/reportController");
+
+// ==========================================
+// DASHBOARD
+// ==========================================
 
 router.get("/dashboard", authMiddleware, getDashboard);
+
+// ==========================================
+// SUMMARY
+// ==========================================
+
 router.get("/summary", authMiddleware, getSummary);
-router.get("/category", authMiddleware, getCategoryReport);
-router.get("/monthly", authMiddleware, getMonthlyReport);
-router.get("/account", authMiddleware, getAccountReport);
-router.get("/trends", authMiddleware, getTrendsReport);
+
+// ==========================================
+// CATEGORY
+// ==========================================
+
+router.get("/category", authMiddleware, getCategory);
+
+// ==========================================
+// MONTHLY
+// ==========================================
+
+router.get("/monthly", authMiddleware, getMonthly);
+
+// ==========================================
+// ACCOUNT
+// ==========================================
+
+router.get("/account", authMiddleware, getAccount);
+
+// ==========================================
+// TRENDS
+// ==========================================
+
+router.get("/trends", authMiddleware, getTrends);
+
 module.exports = router;

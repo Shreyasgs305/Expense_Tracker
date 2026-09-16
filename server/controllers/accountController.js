@@ -1,12 +1,14 @@
 const Account = require("../models/Account");
 const Transaction = require("../models/Transaction");
 
+// =====================================================
+// GET ALL ACCOUNTS
+// =====================================================
+
 const getAccounts = async (req, res) => {
   try {
-    // Get logged-in user's ID
     const userId = req.user.id;
 
-    // Find only accounts belonging to this user
     const accounts = await Account.find({
       userId: userId,
     });
@@ -23,28 +25,26 @@ const getAccounts = async (req, res) => {
   }
 };
 
+// =====================================================
+// GET ACCOUNT BY ID
+// =====================================================
+
 const getAccountById = async (req, res) => {
   try {
-    // Logged-in user's ID
     const userId = req.user.id;
-
-    // Account ID from URL
     const accountId = req.params.id;
 
-    // Find account AND check ownership
     const account = await Account.findOne({
       _id: accountId,
       userId: userId,
     });
 
-    // Account not found or doesn't belong to user
     if (!account) {
       return res.status(404).json({
         message: "Account not found",
       });
     }
 
-    // Return account
     return res.status(200).json({
       account,
     });
@@ -57,37 +57,111 @@ const getAccountById = async (req, res) => {
   }
 };
 
+// =====================================================
+// CREATE ACCOUNT
+// =====================================================
+
 const createAccount = async (req, res) => {
   try {
-    // Get logged-in user's ID
     const userId = req.user.id;
 
-    // Get account data from request body
-    const { name, type, balance = 0 } = req.body;
+    const {
+      name,
+      type,
+      balance = 0,
+      creditLimit,
+      currency = "INR",
+      institutionName,
+      icon,
+      color,
+    } = req.body;
 
-    // Validate required fields
+    // -----------------------------------------------
+    // Validate name and type
+    // -----------------------------------------------
+
     if (!name || !type) {
       return res.status(400).json({
         message: "Name and type are required",
       });
     }
 
-    // Validate balance
-    if (typeof balance !== "number") {
+    // -----------------------------------------------
+    // Validate account type
+    // -----------------------------------------------
+
+    const allowedTypes = ["BANK", "CASH", "CREDIT_CARD", "WALLET"];
+
+    if (!allowedTypes.includes(type)) {
       return res.status(400).json({
-        message: "Balance must be a number",
+        message: "Invalid account type",
       });
     }
 
-    // Create account
+    // -----------------------------------------------
+    // Validate normal account balance
+    // -----------------------------------------------
+
+    if (typeof balance !== "number" || !Number.isFinite(balance)) {
+      return res.status(400).json({
+        message: "Balance must be a valid number",
+      });
+    }
+
+    // -----------------------------------------------
+    // CREDIT CARD VALIDATION
+    // -----------------------------------------------
+
+    if (type === "CREDIT_CARD") {
+      if (
+        creditLimit === undefined ||
+        creditLimit === null ||
+        creditLimit === ""
+      ) {
+        return res.status(400).json({
+          message: "Credit limit is required for credit card",
+        });
+      }
+
+      if (typeof creditLimit !== "number" || !Number.isFinite(creditLimit)) {
+        return res.status(400).json({
+          message: "Credit limit must be a valid number",
+        });
+      }
+
+      if (creditLimit <= 0) {
+        return res.status(400).json({
+          message: "Credit limit must be greater than 0",
+        });
+      }
+    }
+
+    // -----------------------------------------------
+    // CREATE ACCOUNT
+    // -----------------------------------------------
+
     const account = await Account.create({
-      name: name.trim(),
-      type,
-      balance,
       userId: userId,
+
+      name: name.trim(),
+
+      type: type,
+
+      // Credit card starts with 0 outstanding
+      balance: type === "CREDIT_CARD" ? 0 : balance,
+
+      // Credit limit only for credit cards
+      creditLimit: type === "CREDIT_CARD" ? creditLimit : null,
+
+      currency: currency,
+
+      institutionName: institutionName?.trim() || null,
+
+      icon: icon || null,
+
+      color: color || null,
     });
 
-    // Return created account
     return res.status(201).json({
       message: "Account created successfully",
       account,
@@ -100,19 +174,23 @@ const createAccount = async (req, res) => {
     });
   }
 };
+
+// =====================================================
+// UPDATE ACCOUNT
+// =====================================================
+
 const updateAccount = async (req, res) => {
   try {
-    // Get logged-in user's ID
     const userId = req.user.id;
-
-    // Get account ID from URL
     const accountId = req.params.id;
 
-    // Get only allowed fields
-    const { name, type } = req.body;
+    const { name, type, creditLimit } = req.body;
 
-    // Create update object
     const updates = {};
+
+    // -----------------------------------------------
+    // Name
+    // -----------------------------------------------
 
     if (name !== undefined) {
       if (!name.trim()) {
@@ -124,18 +202,56 @@ const updateAccount = async (req, res) => {
       updates.name = name.trim();
     }
 
+    // -----------------------------------------------
+    // Type
+    // -----------------------------------------------
+
     if (type !== undefined) {
+      const allowedTypes = ["BANK", "CASH", "CREDIT_CARD", "WALLET"];
+
+      if (!allowedTypes.includes(type)) {
+        return res.status(400).json({
+          message: "Invalid account type",
+        });
+      }
+
       updates.type = type;
     }
 
-    // Make sure at least one field is provided
+    // -----------------------------------------------
+    // Credit Limit
+    // -----------------------------------------------
+
+    if (creditLimit !== undefined) {
+      if (typeof creditLimit !== "number" || !Number.isFinite(creditLimit)) {
+        return res.status(400).json({
+          message: "Credit limit must be a valid number",
+        });
+      }
+
+      if (creditLimit <= 0) {
+        return res.status(400).json({
+          message: "Credit limit must be greater than 0",
+        });
+      }
+
+      updates.creditLimit = creditLimit;
+    }
+
+    // -----------------------------------------------
+    // At least one field
+    // -----------------------------------------------
+
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({
         message: "No valid fields provided for update",
       });
     }
 
-    // Find account belonging to logged-in user
+    // -----------------------------------------------
+    // Update account
+    // -----------------------------------------------
+
     const account = await Account.findOneAndUpdate(
       {
         _id: accountId,
@@ -150,14 +266,12 @@ const updateAccount = async (req, res) => {
       },
     );
 
-    // Account not found
     if (!account) {
       return res.status(404).json({
         message: "Account not found",
       });
     }
 
-    // Return updated account
     return res.status(200).json({
       message: "Account updated successfully",
       account,
@@ -171,41 +285,38 @@ const updateAccount = async (req, res) => {
   }
 };
 
+// =====================================================
+// DELETE ACCOUNT
+// =====================================================
+
 const deleteAccount = async (req, res) => {
   try {
-    // Get logged-in user's ID
     const userId = req.user.id;
-
-    // Get account ID from URL
     const accountId = req.params.id;
 
-    // Find account belonging to logged-in user
     const account = await Account.findOne({
       _id: accountId,
       userId: userId,
     });
 
-    // Account not found
     if (!account) {
       return res.status(404).json({
         message: "Account not found",
       });
     }
 
-    // Check whether transactions exist
+    // Check transactions
     const transactionCount = await Transaction.countDocuments({
-      account: accountId,
+      accountId: accountId,
       userId: userId,
     });
 
-    // Don't allow deletion if transactions exist
     if (transactionCount > 0) {
       return res.status(400).json({
         message: "Cannot delete account because transactions exist",
       });
     }
 
-    // Delete account
     await Account.findByIdAndDelete(accountId);
 
     return res.status(200).json({
@@ -220,18 +331,17 @@ const deleteAccount = async (req, res) => {
   }
 };
 
+// =====================================================
+// UPDATE ACCOUNT BALANCE
+// =====================================================
+
 const updateAccountBalance = async (req, res) => {
   try {
-    // Get logged-in user's ID
     const userId = req.user.id;
-
-    // Get account ID from URL
     const accountId = req.params.id;
 
-    // Get balance from request body
     const { balance } = req.body;
 
-    // Validate balance
     if (balance === undefined || balance === null) {
       return res.status(400).json({
         message: "Balance is required",
@@ -244,7 +354,6 @@ const updateAccountBalance = async (req, res) => {
       });
     }
 
-    // Find account belonging to logged-in user
     const account = await Account.findOneAndUpdate(
       {
         _id: accountId,
@@ -261,14 +370,12 @@ const updateAccountBalance = async (req, res) => {
       },
     );
 
-    // Account not found
     if (!account) {
       return res.status(404).json({
         message: "Account not found",
       });
     }
 
-    // Return updated account
     return res.status(200).json({
       message: "Account balance updated successfully",
       account,
@@ -281,6 +388,10 @@ const updateAccountBalance = async (req, res) => {
     });
   }
 };
+
+// =====================================================
+// EXPORT
+// =====================================================
 
 module.exports = {
   getAccounts,

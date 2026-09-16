@@ -5,13 +5,14 @@ import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Accounts from "./pages/Accounts";
+import Categories from "./pages/Categories";
+import Expenses from "./pages/Expenses";
+import AddExpense from "./pages/AddExpense";
+import CreditCardPayment from "./pages/CreditCardPayment";
+import Reports from "./pages/Reports";
 // Temporary pages
 
-const Expenses = () => <h1>Expenses</h1>;
-const AddExpense = () => <h1>Add Expense</h1>;
-const Categories = () => <h1>Categories</h1>;
 const Budgets = () => <h1>Budgets</h1>;
-const Reports = () => <h1>Reports</h1>;
 const Settings = () => <h1>Settings</h1>;
 
 function App() {
@@ -40,7 +41,7 @@ function App() {
           <Route path="/expenses/add" element={<AddExpense />} />
 
           <Route path="/categories" element={<Categories />} />
-
+          <Route path="/credit-card-payment" element={<CreditCardPayment />} />
           <Route path="/budgets" element={<Budgets />} />
 
           <Route path="/reports" element={<Reports />} />

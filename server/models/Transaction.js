@@ -11,7 +11,7 @@ const transactionSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["EXPENSE", "INCOME", "TRANSFER"],
+      enum: ["EXPENSE", "INCOME", "TRANSFER", "CREDIT_CARD_PAYMENT"],
       required: true,
     },
 
@@ -72,6 +72,11 @@ const transactionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       default: null,
       index: true,
+    },
+    fromAccountId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Account",
+      default: null,
     },
   },
   {
