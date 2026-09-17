@@ -10,10 +10,7 @@ import Expenses from "./pages/Expenses";
 import AddExpense from "./pages/AddExpense";
 import CreditCardPayment from "./pages/CreditCardPayment";
 import Reports from "./pages/Reports";
-// Temporary pages
-
-const Budgets = () => <h1>Budgets</h1>;
-const Settings = () => <h1>Settings</h1>;
+import Budgets from "./pages/Budgets";
 
 function App() {
   return (
@@ -45,8 +42,6 @@ function App() {
           <Route path="/budgets" element={<Budgets />} />
 
           <Route path="/reports" element={<Reports />} />
-
-          <Route path="/settings" element={<Settings />} />
         </Route>
 
         {/* ==================== */}

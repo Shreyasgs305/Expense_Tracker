@@ -53,11 +53,6 @@ const Sidebar = ({ isOpen, onClose }) => {
       path: "/reports",
       icon: BarChart3,
     },
-    {
-      name: "Settings",
-      path: "/settings",
-      icon: Settings,
-    },
   ];
 
   return (

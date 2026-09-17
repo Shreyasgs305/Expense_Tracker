@@ -15,8 +15,9 @@ const router = express.Router();
 
 router.get("/", authMiddleware, getBudgets);
 router.get("/:id", authMiddleware, getBudgetById);
+router.get("/:id/status", authMiddleware, getBudgetStatus);
 router.post("/", authMiddleware, createBudget);
 router.put("/:id", authMiddleware, updateBudget);
 router.delete("/:id", authMiddleware, deleteBudget);
-router.get("/:id/status", authMiddleware, getBudgetStatus);
+
 module.exports = router;

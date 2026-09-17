@@ -3,24 +3,89 @@ const Budget = require("../models/Budget");
 const Category = require("../models/Category");
 const Transaction = require("../models/Transaction");
 
+// ==========================================
 // GET /api/budgets
+// ==========================================
+
 const getBudgets = async (req, res) => {
   try {
-    // 1. Authenticate user
     const userId = req.user.id;
 
-    // 2. Find budgets belonging to logged-in user
-    const budgets = await Budget.find({
-      userId: userId,
-    })
-      .populate("categoryId", "name type icon color")
-      .sort({ month: -1, createdAt: -1 });
+    const filter = {
+      userId,
+    };
 
-    // 3. Return budgets
+    // Optional month filter
+    if (req.query.month) {
+      filter.month = req.query.month;
+    }
+
+    const budgets = await Budget.find(filter)
+      .populate("categoryId", "name type icon color")
+      .sort({ month: -1, createdAt: -1 })
+      .lean();
+
+    // Calculate spending for every budget
+    const budgetsWithStatus = await Promise.all(
+      budgets.map(async (budget) => {
+        const [year, month] = budget.month.split("-").map(Number);
+
+        const startDate = new Date(year, month - 1, 1);
+
+        const endDate = new Date(year, month, 1);
+
+        const result = await Transaction.aggregate([
+          {
+            $match: {
+              userId: new mongoose.Types.ObjectId(userId),
+              categoryId: budget.categoryId?._id,
+              type: "EXPENSE",
+              status: {
+                $ne: "CANCELLED",
+              },
+              date: {
+                $gte: startDate,
+                $lt: endDate,
+              },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              spent: {
+                $sum: "$amount",
+              },
+            },
+          },
+        ]);
+
+        const budgetAmount = Number(budget.amount?.toString() || 0);
+
+        const spent =
+          result.length > 0 ? Number(result[0].spent.toString()) : 0;
+
+        const remaining = budgetAmount - spent;
+
+        const percentage = budgetAmount > 0 ? (spent / budgetAmount) * 100 : 0;
+
+        return {
+          ...budget,
+
+          amount: budget.amount,
+
+          spent,
+
+          remaining,
+
+          percentage: Number(percentage.toFixed(2)),
+        };
+      }),
+    );
+
     return res.status(200).json({
       success: true,
-      count: budgets.length,
-      data: budgets,
+      count: budgetsWithStatus.length,
+      data: budgetsWithStatus,
     });
   } catch (error) {
     console.error("Get budgets error:", error);
@@ -32,21 +97,21 @@ const getBudgets = async (req, res) => {
   }
 };
 
+// ==========================================
+// GET /api/budgets/:id
+// ==========================================
+
 const getBudgetById = async (req, res) => {
   try {
-    // 1. Authenticate user
     const userId = req.user.id;
 
-    // 2. Get budget ID
     const budgetId = req.params.id;
 
-    // 3. Find budget belonging to logged-in user
     const budget = await Budget.findOne({
       _id: budgetId,
-      userId: userId,
+      userId,
     }).populate("categoryId", "name type icon color");
 
-    // 4. If not found
     if (!budget) {
       return res.status(404).json({
         success: false,
@@ -54,7 +119,6 @@ const getBudgetById = async (req, res) => {
       });
     }
 
-    // 5. Return budget
     return res.status(200).json({
       success: true,
       data: budget,
@@ -68,16 +132,18 @@ const getBudgetById = async (req, res) => {
     });
   }
 };
+
+// ==========================================
 // POST /api/budgets
+// ==========================================
+
 const createBudget = async (req, res) => {
   try {
-    // 1. Authenticate user
     const userId = req.user.id;
 
-    // 2. Get budget details
     const { category, amount, month, alertPercentage, isActive } = req.body;
 
-    // 3. Validate category
+    // Validate category
     if (!category) {
       return res.status(400).json({
         success: false,
@@ -92,7 +158,7 @@ const createBudget = async (req, res) => {
       });
     }
 
-    // 4. Validate amount
+    // Validate amount
     if (amount === undefined || amount === null) {
       return res.status(400).json({
         success: false,
@@ -102,14 +168,14 @@ const createBudget = async (req, res) => {
 
     const numericAmount = Number(amount);
 
-    if (!Number.isFinite(numericAmount) || numericAmount < 0) {
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
       return res.status(400).json({
         success: false,
-        message: "Amount must be a valid number greater than or equal to 0",
+        message: "Amount must be greater than 0",
       });
     }
 
-    // 5. Validate month
+    // Validate month
     if (!month) {
       return res.status(400).json({
         success: false,
@@ -124,7 +190,7 @@ const createBudget = async (req, res) => {
       });
     }
 
-    // 6. Validate alert percentage if provided
+    // Alert percentage
     let budgetAlertPercentage = 80;
 
     if (alertPercentage !== undefined) {
@@ -142,10 +208,10 @@ const createBudget = async (req, res) => {
       }
     }
 
-    // 7. Verify category belongs to logged-in user
+    // Verify category ownership
     const categoryData = await Category.findOne({
       _id: category,
-      userId: userId,
+      userId,
     });
 
     if (!categoryData) {
@@ -155,7 +221,7 @@ const createBudget = async (req, res) => {
       });
     }
 
-    // Budget should be for an expense category
+    // Only expense categories
     if (categoryData.type !== "EXPENSE") {
       return res.status(400).json({
         success: false,
@@ -163,11 +229,11 @@ const createBudget = async (req, res) => {
       });
     }
 
-    // 8. Check whether budget already exists
+    // Check duplicate
     const existingBudget = await Budget.findOne({
-      userId: userId,
+      userId,
       categoryId: category,
-      month: month,
+      month,
     });
 
     if (existingBudget) {
@@ -177,20 +243,21 @@ const createBudget = async (req, res) => {
       });
     }
 
-    // 9. Create budget
+    // Create budget
     const budget = new Budget({
-      userId: userId,
+      userId,
       categoryId: category,
-      month: month,
+      month,
+
       amount: mongoose.Types.Decimal128.fromString(numericAmount.toString()),
+
       alertPercentage: budgetAlertPercentage,
+
       isActive: isActive !== undefined ? isActive : true,
     });
 
-    // 10. Save budget
     await budget.save();
 
-    // 11. Return created budget
     const createdBudget = await Budget.findById(budget._id).populate(
       "categoryId",
       "name type icon color",
@@ -202,7 +269,6 @@ const createBudget = async (req, res) => {
       data: createdBudget,
     });
   } catch (error) {
-    // Handle unique index race condition
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
@@ -218,19 +284,20 @@ const createBudget = async (req, res) => {
     });
   }
 };
+
+// ==========================================
 // PUT /api/budgets/:id
+// ==========================================
+
 const updateBudget = async (req, res) => {
   try {
-    // 1. Authenticate user
     const userId = req.user.id;
 
-    // 2. Get budget ID
     const budgetId = req.params.id;
 
-    // 3. Find budget belonging to logged-in user
     const budget = await Budget.findOne({
       _id: budgetId,
-      userId: userId,
+      userId,
     });
 
     if (!budget) {
@@ -240,17 +307,16 @@ const updateBudget = async (req, res) => {
       });
     }
 
-    // 4. Get allowed fields
     const { amount, alertPercentage, isActive } = req.body;
 
-    // 5. Validate amount if provided
+    // Amount
     if (amount !== undefined) {
       const numericAmount = Number(amount);
 
-      if (!Number.isFinite(numericAmount) || numericAmount < 0) {
+      if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
         return res.status(400).json({
           success: false,
-          message: "Amount must be a valid number greater than or equal to 0",
+          message: "Amount must be greater than 0",
         });
       }
 
@@ -259,7 +325,7 @@ const updateBudget = async (req, res) => {
       );
     }
 
-    // 6. Validate alert percentage if provided
+    // Alert percentage
     if (alertPercentage !== undefined) {
       const numericAlertPercentage = Number(alertPercentage);
 
@@ -277,7 +343,7 @@ const updateBudget = async (req, res) => {
       budget.alertPercentage = numericAlertPercentage;
     }
 
-    // 7. Update isActive if provided
+    // Active
     if (isActive !== undefined) {
       if (typeof isActive !== "boolean") {
         return res.status(400).json({
@@ -289,16 +355,13 @@ const updateBudget = async (req, res) => {
       budget.isActive = isActive;
     }
 
-    // 8. Save updated budget
     await budget.save();
 
-    // 9. Populate category
     const updatedBudget = await Budget.findById(budget._id).populate(
       "categoryId",
       "name type icon color",
     );
 
-    // 10. Return updated budget
     return res.status(200).json({
       success: true,
       message: "Budget updated successfully",
@@ -314,21 +377,21 @@ const updateBudget = async (req, res) => {
   }
 };
 
+// ==========================================
+// DELETE /api/budgets/:id
+// ==========================================
+
 const deleteBudget = async (req, res) => {
   try {
-    // 1. Authenticate user
     const userId = req.user.id;
 
-    // 2. Get budget ID
     const budgetId = req.params.id;
 
-    // 3. Find budget belonging to logged-in user
     const budget = await Budget.findOne({
       _id: budgetId,
-      userId: userId,
+      userId,
     });
 
-    // 4. If not found
     if (!budget) {
       return res.status(404).json({
         success: false,
@@ -336,13 +399,11 @@ const deleteBudget = async (req, res) => {
       });
     }
 
-    // 5. Delete budget
     await Budget.deleteOne({
       _id: budgetId,
-      userId: userId,
+      userId,
     });
 
-    // 6. Return success
     return res.status(200).json({
       success: true,
       message: "Budget deleted successfully",
@@ -357,18 +418,19 @@ const deleteBudget = async (req, res) => {
   }
 };
 
+// ==========================================
+// GET /api/budgets/:id/status
+// ==========================================
+
 const getBudgetStatus = async (req, res) => {
   try {
-    // 1. Authenticate user
     const userId = req.user.id;
 
-    // 2. Get budget ID
     const budgetId = req.params.id;
 
-    // 3. Find budget belonging to logged-in user
     const budget = await Budget.findOne({
       _id: budgetId,
-      userId: userId,
+      userId,
     }).populate("categoryId", "name type icon color");
 
     if (!budget) {
@@ -378,22 +440,21 @@ const getBudgetStatus = async (req, res) => {
       });
     }
 
-    // 4. Get budget month
     const [year, month] = budget.month.split("-").map(Number);
 
-    // Start of budget month
     const startDate = new Date(year, month - 1, 1);
 
-    // Start of next month
     const endDate = new Date(year, month, 1);
 
-    // 5. Calculate total spending
     const result = await Transaction.aggregate([
       {
         $match: {
           userId: budget.userId,
           categoryId: budget.categoryId._id,
           type: "EXPENSE",
+          status: {
+            $ne: "CANCELLED",
+          },
           date: {
             $gte: startDate,
             $lt: endDate,
@@ -410,28 +471,20 @@ const getBudgetStatus = async (req, res) => {
       },
     ]);
 
-    // 6. Get spent amount
-    const spentDecimal =
-      result.length > 0
-        ? result[0].spent
-        : mongoose.Types.Decimal128.fromString("0");
+    const spent = result.length > 0 ? Number(result[0].spent.toString()) : 0;
 
     const budgetAmount = Number(budget.amount.toString());
-    const spent = Number(spentDecimal.toString());
 
-    // 7. Calculate remaining
     const remaining = budgetAmount - spent;
 
-    // 8. Calculate percentage
     const percentage = budgetAmount > 0 ? (spent / budgetAmount) * 100 : 0;
 
-    // 9. Return status
     return res.status(200).json({
       success: true,
       data: {
         budget: budgetAmount,
-        spent: spent,
-        remaining: remaining,
+        spent,
+        remaining,
         percentage: Number(percentage.toFixed(2)),
       },
     });
@@ -444,6 +497,11 @@ const getBudgetStatus = async (req, res) => {
     });
   }
 };
+
+// ==========================================
+// EXPORTS
+// ==========================================
+
 module.exports = {
   getBudgets,
   getBudgetById,
