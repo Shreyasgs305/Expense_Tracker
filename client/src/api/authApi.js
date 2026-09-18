@@ -18,8 +18,8 @@ export const getMe = async () => {
   return response.data;
 };
 
-export const updateProfile = async (data) => {
-  const response = await axiosInstance.put("/auth/profile", data);
+export const updateProfile = async (profileData) => {
+  const response = await axiosInstance.put("/auth/profile", profileData);
 
   return response.data;
 };

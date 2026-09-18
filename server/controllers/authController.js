@@ -236,7 +236,75 @@ const updateProfile = async (req, res) => {
     });
   }
 };
+const changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
 
+    const { currentPassword, newPassword } = req.body;
+
+    // Validate fields
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message: "Current password and new password are required",
+      });
+    }
+
+    // Validate new password length
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        message: "New password must be at least 6 characters",
+      });
+    }
+
+    // Get user with passwordHash
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    // Check current password
+    const isCurrentPasswordCorrect = await bcrypt.compare(
+      currentPassword,
+      user.passwordHash,
+    );
+
+    if (!isCurrentPasswordCorrect) {
+      return res.status(400).json({
+        message: "Current password is incorrect",
+      });
+    }
+
+    // Prevent same password
+    const isSamePassword = await bcrypt.compare(newPassword, user.passwordHash);
+
+    if (isSamePassword) {
+      return res.status(400).json({
+        message: "New password must be different from current password",
+      });
+    }
+
+    // Hash new password
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    // Save new password
+    user.passwordHash = newPasswordHash;
+
+    await user.save();
+
+    return res.status(200).json({
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    console.error("Change password error:", error);
+
+    return res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
 const deleteAccount = async (req, res) => {
   try {
     // Get logged-in user's ID
@@ -286,4 +354,11 @@ const deleteAccount = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser, me, updateProfile, deleteAccount };
+module.exports = {
+  registerUser,
+  loginUser,
+  me,
+  updateProfile,
+  changePassword,
+  deleteAccount,
+};

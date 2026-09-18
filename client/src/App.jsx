@@ -11,7 +11,9 @@ import AddExpense from "./pages/AddExpense";
 import CreditCardPayment from "./pages/CreditCardPayment";
 import Reports from "./pages/Reports";
 import Budgets from "./pages/Budgets";
-
+import Profile from "./pages/Profile";
+import ChangePassword from "./pages/ChangePassword";
+import Landing from "./pages/Landing";
 function App() {
   return (
     <BrowserRouter>
@@ -19,7 +21,7 @@ function App() {
         {/* ==================== */}
         {/* PUBLIC ROUTES         */}
         {/* ==================== */}
-
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
 
         <Route path="/register" element={<Register />} />
@@ -42,13 +44,13 @@ function App() {
           <Route path="/budgets" element={<Budgets />} />
 
           <Route path="/reports" element={<Reports />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/change-password" element={<ChangePassword />} />
         </Route>
 
         {/* ==================== */}
         {/* DEFAULT ROUTE         */}
         {/* ==================== */}
-
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
         {/* ==================== */}
         {/* UNKNOWN ROUTES        */}

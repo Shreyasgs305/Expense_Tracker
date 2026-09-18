@@ -14,6 +14,7 @@ import {
   PiggyBank,
   CreditCard,
   CircleDollarSign,
+  ArrowDownLeft,
 } from "lucide-react";
 
 import {
@@ -43,7 +44,7 @@ import {
 import { getExpenses } from "../api/expenseApi";
 
 // ======================================================
-// HELPERS
+// COLORS
 // ======================================================
 
 const COLORS = [
@@ -57,27 +58,27 @@ const COLORS = [
   "#14B8A6",
 ];
 
+// ======================================================
+// HELPERS
+// ======================================================
+
 const getNumber = (value) => {
   if (value === null || value === undefined) return 0;
 
   if (typeof value === "object" && value.$numberDecimal) {
-    return Number(value.$numberDecimal);
+    return Number(value.$numberDecimal) || 0;
   }
 
   return Number(value) || 0;
 };
 
-const getExpenseId = (expense) => {
-  return expense?._id || expense?.id;
-};
+const getExpenseId = (expense) => expense?._id || expense?.id;
 
-const getExpenseAmount = (expense) => {
-  return getNumber(expense?.amount ?? expense?.value ?? expense?.totalAmount);
-};
+const getExpenseAmount = (expense) =>
+  getNumber(expense?.amount ?? expense?.value ?? expense?.totalAmount);
 
-const getExpenseDescription = (expense) => {
-  return expense?.description || expense?.title || expense?.note || "Expense";
-};
+const getExpenseDescription = (expense) =>
+  expense?.description || expense?.title || expense?.note || "Expense";
 
 const getExpenseCategory = (expense) => {
   if (typeof expense?.categoryId === "object") {
@@ -103,13 +104,12 @@ const getExpenseAccount = (expense) => {
   return expense?.accountName || "Account";
 };
 
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat("en-IN", {
+const formatCurrency = (value) =>
+  new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(getNumber(value));
-};
 
 const formatDate = (date) => {
   if (!date) return "-";
@@ -128,17 +128,14 @@ const formatDate = (date) => {
 };
 
 // ======================================================
-// COMPONENT
+// REPORTS
 // ======================================================
 
 const Reports = () => {
-  // ====================================================
-  // CURRENT DATE
-  // ====================================================
-
   const currentDate = new Date();
 
   const currentYear = currentDate.getFullYear();
+
   const currentMonth = currentDate.getMonth() + 1;
 
   // ====================================================
@@ -146,14 +143,17 @@ const Reports = () => {
   // ====================================================
 
   const [year, setYear] = useState(currentYear);
+
   const [month, setMonth] = useState(currentMonth);
 
   const [accountFilter, setAccountFilter] = useState("ALL");
+
   const [categoryFilter, setCategoryFilter] = useState("ALL");
+
   const [transactionType, setTransactionType] = useState("ALL");
 
   // ====================================================
-  // REPORT STATES
+  // DATA
   // ====================================================
 
   const [summary, setSummary] = useState(null);
@@ -169,7 +169,7 @@ const Reports = () => {
   const [expenses, setExpenses] = useState([]);
 
   // ====================================================
-  // UI STATES
+  // UI
   // ====================================================
 
   const [loading, setLoading] = useState(true);
@@ -229,27 +229,15 @@ const Reports = () => {
         }).catch(() => null),
       ]);
 
-      // SUMMARY
-
       setSummary(summaryResponse?.data || null);
-
-      // CATEGORY
 
       setCategories(categoryResponse?.data?.categories || []);
 
-      // MONTHLY
-
       setMonthly(monthlyResponse?.data?.monthly || []);
-
-      // ACCOUNTS
 
       setAccounts(accountResponse?.data?.accounts || []);
 
-      // TRENDS
-
       setTrends(trendsResponse?.data?.trends || []);
-
-      // EXPENSES
 
       const expenseData =
         expenseResponse?.data?.expenses || expenseResponse?.data || [];
@@ -264,29 +252,24 @@ const Reports = () => {
     }
   };
 
-  // ====================================================
-  // LOAD ON FILTER CHANGE
-  // ====================================================
-
   useEffect(() => {
     loadReports();
   }, [year, month]);
 
   // ====================================================
-  // RESET FILTERS
+  // RESET
   // ====================================================
 
   const handleReset = () => {
     setYear(currentYear);
     setMonth(currentMonth);
-
     setAccountFilter("ALL");
     setCategoryFilter("ALL");
     setTransactionType("ALL");
   };
 
   // ====================================================
-  // CATEGORY CHART DATA
+  // CHART DATA
   // ====================================================
 
   const categoryChartData = useMemo(() => {
@@ -310,16 +293,18 @@ const Reports = () => {
   // FILTER OPTIONS
   // ====================================================
 
-  const accountOptions = useMemo(() => {
-    return accounts.map((account) => account.name).filter(Boolean);
-  }, [accounts]);
+  const accountOptions = useMemo(
+    () => accounts.map((account) => account.name).filter(Boolean),
+    [accounts],
+  );
 
-  const categoryOptions = useMemo(() => {
-    return categories.map((category) => category.name).filter(Boolean);
-  }, [categories]);
+  const categoryOptions = useMemo(
+    () => categories.map((category) => category.name).filter(Boolean),
+    [categories],
+  );
 
   // ====================================================
-  // RECENT HIGH VALUE TRANSACTIONS
+  // HIGH VALUE TRANSACTIONS
   // ====================================================
 
   const highValueTransactions = useMemo(() => {
@@ -351,26 +336,20 @@ const Reports = () => {
   }, [expenses, accountFilter, categoryFilter, transactionType]);
 
   // ====================================================
-  // AVERAGE DAILY EXPENSE
+  // FINANCIAL VALUES
   // ====================================================
-
-  const averageDailyExpense = useMemo(() => {
-    const daysInMonth = new Date(year, month, 0).getDate();
-
-    const expense = getNumber(summary?.expense);
-
-    return daysInMonth > 0 ? expense / daysInMonth : 0;
-  }, [summary, year, month]);
-
-  // ====================================================
-  // SAVINGS
-  // ====================================================
-
-  const savings = getNumber(summary?.savings);
 
   const income = getNumber(summary?.income);
 
   const expense = getNumber(summary?.expense);
+
+  const savings = getNumber(summary?.savings);
+
+  const averageDailyExpense = useMemo(() => {
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    return daysInMonth > 0 ? expense / daysInMonth : 0;
+  }, [expense, year, month]);
 
   // ====================================================
   // RENDER
@@ -381,30 +360,35 @@ const Reports = () => {
       title="Reports"
       subtitle="Analyze your spending and get insights"
     >
-      <div className="mx-auto max-w-[1400px] space-y-5">
-        {/* =================================================
-            TOP FILTER / MONTH
-        ================================================= */}
+      <div className="mx-auto w-full max-w-[1400px] space-y-3 overflow-hidden sm:space-y-4 lg:space-y-5">
+        {/* ==================================================
+            TOP HEADER
+        ================================================== */}
 
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
               Financial Overview
             </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-0.5 text-xs text-slate-500 sm:text-sm">
               {selectedMonthName} {year}
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm">
-              <CalendarDays size={18} className="text-slate-500" />
+          <div className="flex w-full gap-2 sm:gap-3 lg:w-auto">
+            {/* MONTH */}
+
+            <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 shadow-sm sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 lg:flex-none">
+              <CalendarDays
+                size={16}
+                className="shrink-0 text-slate-500 sm:h-[18px] sm:w-[18px]"
+              />
 
               <select
                 value={month}
                 onChange={(e) => setMonth(Number(e.target.value))}
-                className="bg-transparent text-sm font-semibold text-slate-800 outline-none"
+                className="min-w-0 flex-1 bg-transparent text-xs font-semibold text-slate-800 outline-none sm:text-sm lg:flex-none"
               >
                 {Array.from({ length: 12 }, (_, index) => (
                   <option key={index + 1} value={index + 1}>
@@ -416,10 +400,12 @@ const Reports = () => {
               </select>
             </div>
 
+            {/* YEAR */}
+
             <select
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm outline-none"
+              className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm outline-none sm:rounded-xl sm:px-4 sm:py-3 sm:text-sm lg:flex-none"
             >
               {Array.from({ length: 5 }, (_, index) => {
                 const selectedYear = currentYear - index;
@@ -434,171 +420,113 @@ const Reports = () => {
           </div>
         </div>
 
-        {/* =================================================
+        {/* ==================================================
             ERROR
-        ================================================= */}
+        ================================================== */}
 
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-600 sm:rounded-xl sm:px-4 sm:py-3 sm:text-sm">
             {error}
           </div>
         )}
 
-        {/* =================================================
+        {/* ==================================================
             SUMMARY CARDS
-        ================================================= */}
+        ================================================== */}
 
         {!loading && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {/* TOTAL EXPENSE */}
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
+            {/* EXPENSE */}
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">Total Expenses</p>
-
-                  <h3 className="mt-2 text-2xl font-bold text-slate-900">
-                    {formatCurrency(expense)}
-                  </h3>
-                </div>
-
-                <div className="rounded-full bg-purple-100 p-3 text-purple-600">
-                  <CircleDollarSign size={22} />
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-2 text-xs">
-                <span className="flex items-center font-semibold text-red-500">
-                  <ArrowDownRight size={15} />
+            <SummaryCard
+              title="Total Expenses"
+              value={formatCurrency(expense)}
+              subtitle={`${summary?.expenseCount || 0} transactions`}
+              icon={<CircleDollarSign size={18} />}
+              iconClass="bg-purple-100 text-purple-600"
+              bottom={
+                <span className="flex items-center gap-1 font-semibold text-red-500">
+                  <ArrowUpRight size={13} />
                   Expenses
                 </span>
+              }
+            />
 
-                <span className="text-slate-400">
-                  {summary?.expenseCount || 0} transactions
-                </span>
-              </div>
-            </div>
+            {/* INCOME */}
 
-            {/* TOTAL INCOME */}
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">Total Income</p>
-
-                  <h3 className="mt-2 text-2xl font-bold text-slate-900">
-                    {formatCurrency(income)}
-                  </h3>
-                </div>
-
-                <div className="rounded-full bg-emerald-100 p-3 text-emerald-600">
-                  <TrendingUp size={22} />
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-2 text-xs">
-                <span className="flex items-center font-semibold text-emerald-600">
-                  <ArrowUpRight size={15} />
+            <SummaryCard
+              title="Total Income"
+              value={formatCurrency(income)}
+              subtitle={`${summary?.incomeCount || 0} transactions`}
+              icon={<TrendingUp size={18} />}
+              iconClass="bg-emerald-100 text-emerald-600"
+              bottom={
+                <span className="flex items-center gap-1 font-semibold text-emerald-600">
+                  <ArrowDownLeft size={13} />
                   Income
                 </span>
+              }
+            />
 
-                <span className="text-slate-400">
-                  {summary?.incomeCount || 0} transactions
-                </span>
-              </div>
-            </div>
+            {/* SAVINGS */}
 
-            {/* NET SAVINGS */}
+            <SummaryCard
+              title="Net Savings"
+              value={formatCurrency(savings)}
+              subtitle="Income − Expenses"
+              icon={<PiggyBank size={18} />}
+              iconClass="bg-blue-100 text-blue-600"
+              valueClass={savings >= 0 ? "text-slate-900" : "text-red-600"}
+            />
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">Net Savings</p>
+            {/* DAILY */}
 
-                  <h3
-                    className={`mt-2 text-2xl font-bold ${
-                      savings >= 0 ? "text-slate-900" : "text-red-600"
-                    }`}
-                  >
-                    {formatCurrency(savings)}
-                  </h3>
-                </div>
-
-                <div className="rounded-full bg-blue-100 p-3 text-blue-600">
-                  <PiggyBank size={22} />
-                </div>
-              </div>
-
-              <div className="mt-4 text-xs text-slate-400">
-                Income − Expenses
-              </div>
-            </div>
-
-            {/* AVERAGE DAILY */}
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">
-                    Average Daily Expense
-                  </p>
-
-                  <h3 className="mt-2 text-2xl font-bold text-slate-900">
-                    {formatCurrency(averageDailyExpense)}
-                  </h3>
-                </div>
-
-                <div className="rounded-full bg-amber-100 p-3 text-amber-600">
-                  <Wallet size={22} />
-                </div>
-              </div>
-
-              <div className="mt-4 text-xs text-slate-400">
-                Based on {selectedMonthName} {year}
-              </div>
-            </div>
+            <SummaryCard
+              title="Average Daily Expense"
+              value={formatCurrency(averageDailyExpense)}
+              subtitle={`Based on ${selectedMonthName}`}
+              icon={<Wallet size={18} />}
+              iconClass="bg-amber-100 text-amber-600"
+            />
           </div>
         )}
 
-        {/* =================================================
-            FILTER BAR
-        ================================================= */}
+        {/* ==================================================
+            FILTERS
+        ================================================== */}
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <Filter size={18} className="text-purple-600" />
+        <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-4">
+          <div className="mb-3 flex items-center gap-1.5 sm:mb-4 sm:gap-2">
+            <Filter size={16} className="text-purple-600" />
 
-            <h3 className="font-semibold text-slate-900">Filters</h3>
+            <h3 className="text-sm font-semibold text-slate-900 sm:text-base">
+              Filters
+            </h3>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-5">
             {/* DATE */}
 
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-500">
-                Date Range
-              </label>
+            <FilterBox label="Date Range">
+              <div className="flex min-h-[38px] items-center rounded-lg border border-slate-200 px-2.5 py-2 sm:rounded-xl sm:px-3 sm:py-2.5">
+                <CalendarDays
+                  size={14}
+                  className="mr-1.5 shrink-0 text-slate-400 sm:mr-2"
+                />
 
-              <div className="flex items-center rounded-xl border border-slate-200 px-3 py-2.5">
-                <CalendarDays size={16} className="mr-2 text-slate-400" />
-
-                <span className="text-sm text-slate-700">
+                <span className="truncate text-[11px] text-slate-700 sm:text-sm">
                   {selectedMonthName} {year}
                 </span>
               </div>
-            </div>
+            </FilterBox>
 
             {/* ACCOUNT */}
 
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-500">
-                Account
-              </label>
-
+            <FilterBox label="Account">
               <select
                 value={accountFilter}
                 onChange={(e) => setAccountFilter(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-purple-500"
+                className="w-full min-h-[38px] rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[11px] text-slate-700 outline-none focus:border-purple-500 sm:rounded-xl sm:px-3 sm:py-2.5 sm:text-sm"
               >
                 <option value="ALL">All Accounts</option>
 
@@ -608,19 +536,15 @@ const Reports = () => {
                   </option>
                 ))}
               </select>
-            </div>
+            </FilterBox>
 
             {/* CATEGORY */}
 
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-500">
-                Category
-              </label>
-
+            <FilterBox label="Category">
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-purple-500"
+                className="w-full min-h-[38px] rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[11px] text-slate-700 outline-none focus:border-purple-500 sm:rounded-xl sm:px-3 sm:py-2.5 sm:text-sm"
               >
                 <option value="ALL">All Categories</option>
 
@@ -630,19 +554,15 @@ const Reports = () => {
                   </option>
                 ))}
               </select>
-            </div>
+            </FilterBox>
 
             {/* TYPE */}
 
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-500">
-                Transaction Type
-              </label>
-
+            <FilterBox label="Transaction Type">
               <select
                 value={transactionType}
                 onChange={(e) => setTransactionType(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-purple-500"
+                className="w-full min-h-[38px] rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[11px] text-slate-700 outline-none focus:border-purple-500 sm:rounded-xl sm:px-3 sm:py-2.5 sm:text-sm"
               >
                 <option value="ALL">All Types</option>
 
@@ -650,116 +570,117 @@ const Reports = () => {
 
                 <option value="INCOME">Income</option>
               </select>
-            </div>
+            </FilterBox>
 
             {/* RESET */}
 
-            <div className="flex items-end">
+            <div className="col-span-2 flex items-end xl:col-span-1">
               <button
+                type="button"
                 onClick={handleReset}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="flex min-h-[38px] w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-50 sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm"
               >
-                <RefreshCw size={16} />
+                <RefreshCw size={14} />
                 Reset
               </button>
             </div>
           </div>
         </div>
 
-        {/* =================================================
+        {/* ==================================================
             LOADING
-        ================================================= */}
+        ================================================== */}
 
         {loading ? (
-          <div className="flex min-h-[400px] items-center justify-center">
+          <div className="flex min-h-[300px] items-center justify-center">
             <div className="text-center">
-              <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-purple-600" />
+              <div className="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-purple-600" />
 
-              <p className="mt-3 text-sm text-slate-500">Loading reports...</p>
+              <p className="mt-3 text-xs text-slate-500 sm:text-sm">
+                Loading reports...
+              </p>
             </div>
           </div>
         ) : (
           <>
-            {/* =================================================
-                CHART ROW 1
-            ================================================= */}
+            {/* ==================================================
+                INCOME VS EXPENSE + CATEGORY
+            ================================================== */}
 
-            <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 xl:grid-cols-2">
               {/* INCOME VS EXPENSE */}
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="mb-5 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-slate-900">
-                      Income vs Expenses
-                    </h3>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Monthly comparison for {year}
-                    </p>
-                  </div>
-
-                  <BarChart3 size={20} className="text-purple-600" />
-                </div>
-
-                <div className="h-[330px]">
+              <ReportCard
+                title="Income vs Expenses"
+                subtitle={`Monthly comparison for ${year}`}
+                icon={<BarChart3 size={18} />}
+              >
+                <div className="h-[240px] sm:h-[300px] lg:h-[330px]">
                   {monthly.length === 0 ? (
-                    <div className="flex h-full items-center justify-center text-sm text-slate-400">
-                      No monthly data available
-                    </div>
+                    <EmptyChart text="No monthly data available" />
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={monthly}>
+                      <BarChart
+                        data={monthly}
+                        margin={{
+                          top: 5,
+                          right: 5,
+                          left: -15,
+                          bottom: 0,
+                        }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
 
-                        <XAxis dataKey="monthName" tick={{ fontSize: 12 }} />
+                        <XAxis
+                          dataKey="monthName"
+                          tick={{
+                            fontSize: 10,
+                          }}
+                        />
 
-                        <YAxis tick={{ fontSize: 11 }} />
+                        <YAxis
+                          tick={{
+                            fontSize: 9,
+                          }}
+                        />
 
                         <Tooltip formatter={(value) => formatCurrency(value)} />
 
-                        <Legend />
+                        <Legend
+                          wrapperStyle={{
+                            fontSize: 11,
+                          }}
+                        />
 
                         <Bar
                           dataKey="income"
                           name="Income"
                           fill="#6D28D9"
-                          radius={[5, 5, 0, 0]}
+                          radius={[4, 4, 0, 0]}
                         />
 
                         <Bar
                           dataKey="expense"
                           name="Expenses"
                           fill="#F97316"
-                          radius={[5, 5, 0, 0]}
+                          radius={[4, 4, 0, 0]}
                         />
                       </BarChart>
                     </ResponsiveContainer>
                   )}
                 </div>
-              </div>
+              </ReportCard>
 
-              {/* EXPENSES BY CATEGORY */}
+              {/* CATEGORY */}
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="mb-5 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-slate-900">
-                      Expenses by Category
-                    </h3>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      {selectedMonthName} {year}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 items-center gap-4 md:grid-cols-2">
-                  <div className="h-[300px]">
+              <ReportCard
+                title="Expenses by Category"
+                subtitle={`${selectedMonthName} ${year}`}
+              >
+                <div className="grid grid-cols-1 items-center gap-2 sm:gap-4 md:grid-cols-2">
+                  <div className="h-[230px] sm:h-[280px] lg:h-[300px]">
                     {categoryChartData.length === 0 ? (
-                      <div className="flex h-full items-center justify-center text-sm text-slate-400">
-                        No expense data
-                      </div>
+                      <EmptyChart text="No expense data" />
                     ) : (
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -769,8 +690,8 @@ const Reports = () => {
                             nameKey="name"
                             cx="50%"
                             cy="50%"
-                            innerRadius={65}
-                            outerRadius={105}
+                            innerRadius="45%"
+                            outerRadius="72%"
                             paddingAngle={2}
                           >
                             {categoryChartData.map((_, index) => (
@@ -789,7 +710,7 @@ const Reports = () => {
                     )}
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {categoryChartData.slice(0, 7).map((category, index) => {
                       const total = categoryChartData.reduce(
                         (sum, item) => sum + item.value,
@@ -804,27 +725,27 @@ const Reports = () => {
                       return (
                         <div
                           key={category.name}
-                          className="flex items-center justify-between gap-3"
+                          className="flex items-center justify-between gap-2"
                         >
-                          <div className="flex min-w-0 items-center gap-2">
+                          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                             <span
-                              className="h-3 w-3 shrink-0 rounded-full"
+                              className="h-2.5 w-2.5 shrink-0 rounded-full"
                               style={{
                                 backgroundColor: COLORS[index % COLORS.length],
                               }}
                             />
 
-                            <span className="truncate text-sm text-slate-700">
+                            <span className="truncate text-[11px] text-slate-700 sm:text-sm">
                               {category.name}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-slate-800">
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className="text-[11px] font-medium text-slate-800 sm:text-sm">
                               {formatCurrency(category.value)}
                             </span>
 
-                            <span className="w-10 text-right text-xs text-slate-400">
+                            <span className="w-8 text-right text-[10px] text-slate-400 sm:w-10 sm:text-xs">
                               {percentage}%
                             </span>
                           </div>
@@ -833,51 +754,65 @@ const Reports = () => {
                     })}
                   </div>
                 </div>
-              </div>
+              </ReportCard>
             </div>
 
-            {/* =================================================
-                CHART ROW 2
-            ================================================= */}
+            {/* ==================================================
+                MONTHLY TREND + TOP CATEGORIES
+            ================================================== */}
 
-            <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-              {/* MONTHLY TREND */}
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 xl:grid-cols-2">
+              {/* TREND */}
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="mb-5">
-                  <h3 className="font-bold text-slate-900">Monthly Trend</h3>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    Income and expenses over the last 6 months
-                  </p>
-                </div>
-
-                <div className="h-[320px]">
+              <ReportCard
+                title="Monthly Trend"
+                subtitle="Income and expenses over the last 6 months"
+              >
+                <div className="h-[240px] sm:h-[290px] lg:h-[320px]">
                   {trends.length === 0 ? (
-                    <div className="flex h-full items-center justify-center text-sm text-slate-400">
-                      No trend data available
-                    </div>
+                    <EmptyChart text="No trend data available" />
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={trends}>
+                      <LineChart
+                        data={trends}
+                        margin={{
+                          top: 5,
+                          right: 5,
+                          left: -15,
+                          bottom: 0,
+                        }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
 
-                        <XAxis dataKey="monthName" tick={{ fontSize: 12 }} />
+                        <XAxis
+                          dataKey="monthName"
+                          tick={{
+                            fontSize: 10,
+                          }}
+                        />
 
-                        <YAxis tick={{ fontSize: 11 }} />
+                        <YAxis
+                          tick={{
+                            fontSize: 9,
+                          }}
+                        />
 
                         <Tooltip formatter={(value) => formatCurrency(value)} />
 
-                        <Legend />
+                        <Legend
+                          wrapperStyle={{
+                            fontSize: 11,
+                          }}
+                        />
 
                         <Line
                           type="monotone"
                           dataKey="income"
                           name="Income"
                           stroke="#6D28D9"
-                          strokeWidth={3}
+                          strokeWidth={2.5}
                           dot={{
-                            r: 4,
+                            r: 3,
                           }}
                         />
 
@@ -886,39 +821,27 @@ const Reports = () => {
                           dataKey="expense"
                           name="Expenses"
                           stroke="#F97316"
-                          strokeWidth={3}
+                          strokeWidth={2.5}
                           dot={{
-                            r: 4,
+                            r: 3,
                           }}
                         />
                       </LineChart>
                     </ResponsiveContainer>
                   )}
                 </div>
-              </div>
+              </ReportCard>
 
-              {/* TOP SPENDING CATEGORIES */}
+              {/* TOP CATEGORIES */}
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="mb-5 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-slate-900">
-                      Top Spending Categories
-                    </h3>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Highest expense categories
-                    </p>
-                  </div>
-
-                  <span className="text-xs font-semibold text-purple-600">
-                    {selectedMonthName}
-                  </span>
-                </div>
-
-                <div className="space-y-4">
+              <ReportCard
+                title="Top Spending Categories"
+                subtitle="Highest expense categories"
+                rightText={selectedMonthName}
+              >
+                <div className="space-y-2.5 sm:space-y-4">
                   {topCategories.length === 0 ? (
-                    <div className="py-10 text-center text-sm text-slate-400">
+                    <div className="py-10 text-center text-xs text-slate-400 sm:text-sm">
                       No category data
                     </div>
                   ) : (
@@ -935,23 +858,23 @@ const Reports = () => {
 
                       return (
                         <div key={category.categoryId || category.name}>
-                          <div className="mb-1.5 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-50 text-xs font-bold text-purple-600">
+                          <div className="mb-1 flex items-center justify-between sm:mb-1.5">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-50 text-[10px] font-bold text-purple-600 sm:h-7 sm:w-7 sm:text-xs">
                                 {index + 1}
                               </span>
 
-                              <span className="text-sm font-medium text-slate-800">
+                              <span className="truncate text-[11px] font-medium text-slate-800 sm:text-sm">
                                 {category.name}
                               </span>
                             </div>
 
-                            <span className="text-sm font-semibold text-slate-900">
+                            <span className="ml-2 shrink-0 text-xs font-semibold text-slate-900 sm:text-sm">
                               {formatCurrency(category.amount)}
                             </span>
                           </div>
 
-                          <div className="ml-10 h-2 overflow-hidden rounded-full bg-slate-100">
+                          <div className="ml-8 h-1.5 overflow-hidden rounded-full bg-slate-100 sm:ml-10 sm:h-2">
                             <div
                               className="h-full rounded-full bg-purple-600 transition-all"
                               style={{
@@ -964,141 +887,90 @@ const Reports = () => {
                     })
                   )}
                 </div>
-              </div>
+              </ReportCard>
             </div>
 
-            {/* =================================================
+            {/* ==================================================
                 INSIGHTS + HIGH VALUE
-            ================================================= */}
+            ================================================== */}
 
-            <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-              {/* SPENDING INSIGHTS */}
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 xl:grid-cols-2">
+              {/* INSIGHTS */}
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="mb-5">
-                  <h3 className="font-bold text-slate-900">
-                    Spending Insights
-                  </h3>
+              <ReportCard
+                title="Spending Insights"
+                subtitle="Quick insights from your financial activity"
+              >
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <InsightCard
+                    icon={<TrendingUp size={16} />}
+                    iconClass="bg-emerald-100 text-emerald-600"
+                    value={formatCurrency(income)}
+                    valueClass="text-emerald-600"
+                    label="Total income this month"
+                  />
 
-                  <p className="mt-1 text-xs text-slate-500">
-                    Quick insights from your financial activity
-                  </p>
+                  <InsightCard
+                    icon={<TrendingDown size={16} />}
+                    iconClass="bg-red-100 text-red-600"
+                    value={formatCurrency(expense)}
+                    valueClass="text-red-600"
+                    label="Total expenses this month"
+                  />
+
+                  <InsightCard
+                    icon={<CreditCard size={16} />}
+                    iconClass="bg-blue-100 text-blue-600"
+                    value={topCategories[0]?.name || "No data"}
+                    valueClass="text-blue-600"
+                    label="Most spent category"
+                  />
+
+                  <InsightCard
+                    icon={<PiggyBank size={16} />}
+                    iconClass="bg-purple-100 text-purple-600"
+                    value={formatCurrency(savings)}
+                    valueClass={
+                      savings >= 0 ? "text-purple-600" : "text-red-600"
+                    }
+                    label="Net savings"
+                  />
                 </div>
+              </ReportCard>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {/* INCOME */}
+              {/* HIGH VALUE */}
 
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                    <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                      <TrendingUp size={18} />
-                    </div>
-
-                    <p className="text-xl font-bold text-emerald-600">
-                      {formatCurrency(income)}
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Total income this month
-                    </p>
-                  </div>
-
-                  {/* EXPENSE */}
-
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                    <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600">
-                      <TrendingDown size={18} />
-                    </div>
-
-                    <p className="text-xl font-bold text-red-600">
-                      {formatCurrency(expense)}
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Total expenses this month
-                    </p>
-                  </div>
-
-                  {/* TOP CATEGORY */}
-
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                    <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                      <CreditCard size={18} />
-                    </div>
-
-                    <p className="truncate text-xl font-bold text-blue-600">
-                      {topCategories[0]?.name || "No data"}
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Most spent category
-                    </p>
-                  </div>
-
-                  {/* SAVINGS */}
-
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                    <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-purple-100 text-purple-600">
-                      <PiggyBank size={18} />
-                    </div>
-
-                    <p
-                      className={`text-xl font-bold ${
-                        savings >= 0 ? "text-purple-600" : "text-red-600"
-                      }`}
-                    >
-                      {formatCurrency(savings)}
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-500">Net savings</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* RECENT HIGH VALUE TRANSACTIONS */}
-
-              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-100 p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-bold text-slate-900">
-                        Recent High Value Transactions
-                      </h3>
-
-                      <p className="mt-1 text-xs text-slate-500">
-                        Your largest transactions
-                      </p>
-                    </div>
-
-                    <CircleDollarSign size={20} className="text-purple-600" />
-                  </div>
-                </div>
-
+              <ReportCard
+                title="Recent High Value Transactions"
+                subtitle="Your largest transactions"
+                icon={<CircleDollarSign size={18} />}
+              >
                 {highValueTransactions.length === 0 ? (
-                  <div className="p-8 text-center text-sm text-slate-400">
+                  <div className="py-10 text-center text-xs text-slate-400 sm:text-sm">
                     No transaction data available
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[650px]">
+                  <div className="w-full overflow-x-auto">
+                    <table className="w-full min-w-[560px]">
                       <thead>
                         <tr className="border-b border-slate-100 bg-slate-50">
-                          <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
+                          <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-slate-500 sm:px-5 sm:py-3 sm:text-xs">
                             Date
                           </th>
 
-                          <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
+                          <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-slate-500 sm:px-5 sm:py-3 sm:text-xs">
                             Description
                           </th>
 
-                          <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
+                          <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-slate-500 sm:px-5 sm:py-3 sm:text-xs">
                             Category
                           </th>
 
-                          <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
+                          <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-slate-500 sm:px-5 sm:py-3 sm:text-xs">
                             Account
                           </th>
 
-                          <th className="px-5 py-3 text-right text-xs font-semibold text-slate-500">
+                          <th className="px-3 py-2.5 text-right text-[10px] font-semibold text-slate-500 sm:px-5 sm:py-3 sm:text-xs">
                             Amount
                           </th>
                         </tr>
@@ -1108,31 +980,41 @@ const Reports = () => {
                         {highValueTransactions.map((transaction) => {
                           const amount = getExpenseAmount(transaction);
 
+                          const type = String(
+                            transaction?.type || "EXPENSE",
+                          ).toUpperCase();
+
+                          const isIncome = type === "INCOME";
+
                           return (
                             <tr
                               key={getExpenseId(transaction)}
                               className="border-b border-slate-50 last:border-0"
                             >
-                              <td className="whitespace-nowrap px-5 py-3 text-xs text-slate-500">
+                              <td className="whitespace-nowrap px-3 py-2.5 text-[10px] text-slate-500 sm:px-5 sm:py-3 sm:text-xs">
                                 {formatDate(
                                   transaction.date || transaction.createdAt,
                                 )}
                               </td>
 
-                              <td className="max-w-[160px] truncate px-5 py-3 text-sm font-medium text-slate-800">
+                              <td className="max-w-[140px] truncate px-3 py-2.5 text-xs font-medium text-slate-800 sm:max-w-[160px] sm:px-5 sm:py-3 sm:text-sm">
                                 {getExpenseDescription(transaction)}
                               </td>
 
-                              <td className="px-5 py-3 text-xs text-slate-600">
+                              <td className="px-3 py-2.5 text-[10px] text-slate-600 sm:px-5 sm:py-3 sm:text-xs">
                                 {getExpenseCategory(transaction)}
                               </td>
 
-                              <td className="px-5 py-3 text-xs text-slate-600">
+                              <td className="px-3 py-2.5 text-[10px] text-slate-600 sm:px-5 sm:py-3 sm:text-xs">
                                 {getExpenseAccount(transaction)}
                               </td>
 
-                              <td className="whitespace-nowrap px-5 py-3 text-right text-sm font-semibold text-red-500">
-                                - {formatCurrency(amount)}
+                              <td
+                                className={`whitespace-nowrap px-3 py-2.5 text-right text-xs font-semibold sm:px-5 sm:py-3 sm:text-sm ${
+                                  isIncome ? "text-emerald-600" : "text-red-500"
+                                }`}
+                              >
+                                {isIncome ? "+" : "-"} {formatCurrency(amount)}
                               </td>
                             </tr>
                           );
@@ -1141,24 +1023,19 @@ const Reports = () => {
                     </table>
                   </div>
                 )}
-              </div>
+              </ReportCard>
             </div>
 
-            {/* =================================================
+            {/* ==================================================
                 CATEGORY BREAKDOWN
-            ================================================= */}
+            ================================================== */}
 
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 p-5">
-                <h3 className="font-bold text-slate-900">Category Breakdown</h3>
-
-                <p className="mt-1 text-xs text-slate-500">
-                  Detailed spending for {selectedMonthName} {year}
-                </p>
-              </div>
-
+            <ReportCard
+              title="Category Breakdown"
+              subtitle={`Detailed spending for ${selectedMonthName} ${year}`}
+            >
               {categories.length === 0 ? (
-                <div className="p-8 text-center text-sm text-slate-400">
+                <div className="py-8 text-center text-xs text-slate-400 sm:py-10 sm:text-sm">
                   No category expenses for this month.
                 </div>
               ) : (
@@ -1177,29 +1054,29 @@ const Reports = () => {
                     return (
                       <div
                         key={category.categoryId || category.name}
-                        className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+                        className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           <span
-                            className="h-3 w-3 rounded-full"
+                            className="h-2.5 w-2.5 shrink-0 rounded-full"
                             style={{
                               backgroundColor: COLORS[index % COLORS.length],
                             }}
                           />
 
-                          <div>
-                            <p className="text-sm font-semibold text-slate-800">
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold text-slate-800 sm:text-sm">
                               {category.name}
                             </p>
 
-                            <p className="text-xs text-slate-400">
+                            <p className="text-[10px] text-slate-400 sm:text-xs">
                               {category.count || 0} transactions
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-5">
-                          <div className="h-2 w-32 overflow-hidden rounded-full bg-slate-100">
+                        <div className="flex items-center justify-between gap-3 pl-4 sm:justify-end sm:gap-5 sm:pl-0">
+                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100 sm:w-32 sm:flex-none sm:h-2">
                             <div
                               className="h-full rounded-full"
                               style={{
@@ -1209,11 +1086,11 @@ const Reports = () => {
                             />
                           </div>
 
-                          <span className="w-24 text-right text-sm font-semibold text-slate-900">
+                          <span className="w-20 text-right text-xs font-semibold text-slate-900 sm:w-24 sm:text-sm">
                             {formatCurrency(amount)}
                           </span>
 
-                          <span className="w-12 text-right text-xs text-slate-400">
+                          <span className="w-9 text-right text-[10px] text-slate-400 sm:w-12 sm:text-xs">
                             {percentage}%
                           </span>
                         </div>
@@ -1222,14 +1099,12 @@ const Reports = () => {
                   })}
                 </div>
               )}
-            </div>
+            </ReportCard>
 
-            {/* =================================================
-                FOOTER
-            ================================================= */}
+            {/* FOOTER */}
 
-            <div className="py-4 text-center">
-              <p className="text-xs text-slate-400">
+            <div className="py-3 text-center sm:py-4">
+              <p className="text-[10px] text-slate-400 sm:text-xs">
                 Expense Tracker • Financial Reports
               </p>
             </div>
@@ -1237,6 +1112,134 @@ const Reports = () => {
         )}
       </div>
     </PageLayout>
+  );
+};
+
+// ======================================================
+// SUMMARY CARD
+// ======================================================
+
+const SummaryCard = ({
+  title,
+  value,
+  subtitle,
+  icon,
+  iconClass,
+  bottom,
+  valueClass = "text-slate-900",
+}) => {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-[10px] text-slate-500 sm:text-sm">
+            {title}
+          </p>
+
+          <h3
+            className={`mt-1.5 truncate text-base font-bold sm:mt-2 sm:text-2xl ${valueClass}`}
+          >
+            {value}
+          </h3>
+        </div>
+
+        <div className={`shrink-0 rounded-full p-2 sm:p-3 ${iconClass}`}>
+          {icon}
+        </div>
+      </div>
+
+      <div className="mt-2 flex items-center justify-between gap-1.5 text-[10px] sm:mt-4 sm:text-xs">
+        {bottom || <span className="truncate text-slate-400">{subtitle}</span>}
+
+        {bottom && <span className="truncate text-slate-400">{subtitle}</span>}
+      </div>
+    </div>
+  );
+};
+
+// ======================================================
+// REPORT CARD
+// ======================================================
+
+const ReportCard = ({ title, subtitle, icon, rightText, children }) => {
+  return (
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
+      <div className="mb-3 flex items-start justify-between gap-2 sm:mb-5">
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-bold text-slate-900 sm:text-base">
+            {title}
+          </h3>
+
+          {subtitle && (
+            <p className="mt-0.5 truncate text-[10px] text-slate-500 sm:mt-1 sm:text-xs">
+              {subtitle}
+            </p>
+          )}
+        </div>
+
+        {rightText ? (
+          <span className="shrink-0 text-[10px] font-semibold text-purple-600 sm:text-xs">
+            {rightText}
+          </span>
+        ) : (
+          icon && <div className="shrink-0 text-purple-600">{icon}</div>
+        )}
+      </div>
+
+      {children}
+    </div>
+  );
+};
+
+// ======================================================
+// FILTER BOX
+// ======================================================
+
+const FilterBox = ({ label, children }) => {
+  return (
+    <div className="min-w-0">
+      <label className="mb-1 block text-[10px] font-medium text-slate-500 sm:mb-1.5 sm:text-xs">
+        {label}
+      </label>
+
+      {children}
+    </div>
+  );
+};
+
+// ======================================================
+// INSIGHT CARD
+// ======================================================
+
+const InsightCard = ({ icon, iconClass, value, valueClass, label }) => {
+  return (
+    <div className="min-w-0 rounded-lg border border-slate-100 bg-slate-50 p-2.5 sm:rounded-xl sm:p-4">
+      <div
+        className={`mb-2 flex h-7 w-7 items-center justify-center rounded-full sm:mb-3 sm:h-9 sm:w-9 ${iconClass}`}
+      >
+        {icon}
+      </div>
+
+      <p className={`truncate text-sm font-bold sm:text-xl ${valueClass}`}>
+        {value}
+      </p>
+
+      <p className="mt-1 line-clamp-2 text-[10px] text-slate-500 sm:text-xs">
+        {label}
+      </p>
+    </div>
+  );
+};
+
+// ======================================================
+// EMPTY CHART
+// ======================================================
+
+const EmptyChart = ({ text }) => {
+  return (
+    <div className="flex h-full items-center justify-center text-xs text-slate-400 sm:text-sm">
+      {text}
+    </div>
   );
 };
 
