@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Account = require("../models/Account");
 const Transaction = require("../models/Transaction");
 const Budget = require("../models/Budget");
+const Loan = require("../models/Loan");
 
 // ==========================================
 // HELPER: VALIDATE USER
@@ -140,6 +141,45 @@ const getDashboard = async (req, res) => {
       creditResult.length > 0 ? Number(creditResult[0].creditAvailable) : 0;
 
     // =========================
+    // LOANS
+    // =========================
+
+    const loanResult = await Loan.aggregate([
+      {
+        $match: {
+          userId,
+          status: {
+            $ne: "PAID",
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$type",
+
+          totalRemaining: {
+            $sum: "$remainingAmount",
+          },
+        },
+      },
+    ]);
+
+    let toReceive = 0;
+    let toPay = 0;
+
+    loanResult.forEach((item) => {
+      const total = Number(item.totalRemaining.toString());
+
+      if (item._id === "LENT") {
+        toReceive = total;
+      }
+
+      if (item._id === "BORROWED") {
+        toPay = total;
+      }
+    });
+
+    // =========================
     // INCOME + EXPENSE
     // =========================
 
@@ -147,9 +187,11 @@ const getDashboard = async (req, res) => {
       {
         $match: {
           userId,
+
           status: {
             $ne: "CANCELLED",
           },
+
           type: {
             $in: ["INCOME", "EXPENSE"],
           },
@@ -167,6 +209,7 @@ const getDashboard = async (req, res) => {
     ]);
 
     let totalIncome = 0;
+
     let totalExpenses = 0;
 
     summaryResult.forEach((item) => {
@@ -197,6 +240,7 @@ const getDashboard = async (req, res) => {
       .populate("categoryId", "name type icon color")
       .populate("accountId", "name type")
       .populate("fromAccountId", "name type")
+      .populate("loanId", "type personName")
       .sort({
         date: -1,
         createdAt: -1,
@@ -212,10 +256,13 @@ const getDashboard = async (req, res) => {
       {
         $match: {
           userId,
+
           type: "EXPENSE",
+
           status: {
             $ne: "CANCELLED",
           },
+
           categoryId: {
             $ne: null,
           },
@@ -233,8 +280,11 @@ const getDashboard = async (req, res) => {
       {
         $lookup: {
           from: "categories",
+
           localField: "_id",
+
           foreignField: "_id",
+
           as: "category",
         },
       },
@@ -342,6 +392,10 @@ const getDashboard = async (req, res) => {
       };
     });
 
+    // =========================
+    // RESPONSE
+    // =========================
+
     return res.status(200).json({
       success: true,
 
@@ -355,6 +409,11 @@ const getDashboard = async (req, res) => {
         savings,
 
         creditAvailable,
+
+        // LOANS
+        toReceive,
+
+        toPay,
 
         recentTransactions,
 

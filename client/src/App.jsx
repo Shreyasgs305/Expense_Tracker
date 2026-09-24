@@ -14,6 +14,7 @@ import Budgets from "./pages/Budgets";
 import Profile from "./pages/Profile";
 import ChangePassword from "./pages/ChangePassword";
 import Landing from "./pages/Landing";
+import Loans from "./pages/Loans";
 function App() {
   return (
     <BrowserRouter>
@@ -46,6 +47,7 @@ function App() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/loans" element={<Loans />} />
         </Route>
 
         {/* ==================== */}

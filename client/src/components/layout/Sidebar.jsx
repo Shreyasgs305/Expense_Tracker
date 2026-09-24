@@ -9,6 +9,7 @@ import {
   Settings,
   Wallet,
   X,
+  HandCoins,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
@@ -52,6 +53,11 @@ const Sidebar = ({ isOpen, onClose }) => {
       name: "Reports",
       path: "/reports",
       icon: BarChart3,
+    },
+    {
+      name: "Loans",
+      path: "/loans",
+      icon: HandCoins,
     },
   ];
 

@@ -17,6 +17,8 @@ import {
   Target,
   ChevronRight,
   RefreshCw,
+  HandCoins,
+  CircleDollarSign,
 } from "lucide-react";
 
 // =====================================================
@@ -138,15 +140,72 @@ const AccountIcon = ({ type, size = 18 }) => {
 // =====================================================
 
 const TransactionIcon = ({ type, size = 16 }) => {
+  // Normal income
   if (type === "INCOME") {
     return <ArrowDownLeft size={size} />;
   }
 
+  // Credit card payment
   if (type === "CREDIT_CARD_PAYMENT") {
     return <CreditCard size={size} />;
   }
 
+  // Money received from a person
+  if (type === "LOAN_RECEIVED" || type === "LOAN_REPAYMENT_RECEIVED") {
+    return <HandCoins size={size} />;
+  }
+
+  // Money given to a person
+  if (type === "LOAN_GIVEN" || type === "LOAN_REPAYMENT_MADE") {
+    return <CircleDollarSign size={size} />;
+  }
+
+  // Normal expense
   return <ArrowUpRight size={size} />;
+};
+
+// =====================================================
+// TRANSACTION HELPERS
+// =====================================================
+
+const isLoanTransaction = (type) => {
+  return [
+    "LOAN_GIVEN",
+    "LOAN_RECEIVED",
+    "LOAN_REPAYMENT_RECEIVED",
+    "LOAN_REPAYMENT_MADE",
+  ].includes(type);
+};
+
+const getTransactionTypeLabel = (type) => {
+  switch (type) {
+    case "INCOME":
+      return "Income";
+
+    case "EXPENSE":
+      return "Expense";
+
+    case "CREDIT_CARD_PAYMENT":
+      return "Card Payment";
+
+    case "LOAN_GIVEN":
+      return "Money Lent";
+
+    case "LOAN_RECEIVED":
+      return "Money Borrowed";
+
+    case "LOAN_REPAYMENT_RECEIVED":
+      return "Loan Repayment Received";
+
+    case "LOAN_REPAYMENT_MADE":
+      return "Loan Repayment Made";
+
+    case "TRANSFER":
+      return "Transfer";
+
+    default:
+      return "Transaction";
+  }
 };
 
 // =====================================================
@@ -187,6 +246,11 @@ const Dashboard = () => {
     income: 0,
     expense: 0,
     savings: 0,
+
+    // Loans
+    toReceive: 0,
+    toPay: 0,
+
     recentTransactions: [],
     topCategories: [],
     budgets: [],
@@ -195,6 +259,7 @@ const Dashboard = () => {
   const [accounts, setAccounts] = useState([]);
 
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState("");
 
   // ===================================================
@@ -217,6 +282,10 @@ const Dashboard = () => {
           income: 0,
           expense: 0,
           savings: 0,
+
+          toReceive: 0,
+          toPay: 0,
+
           recentTransactions: [],
           topCategories: [],
           budgets: [],
@@ -224,9 +293,17 @@ const Dashboard = () => {
 
       setDashboardData({
         balance: toNumber(data.balance),
+
         income: toNumber(data.income),
+
         expense: toNumber(data.expense),
+
         savings: toNumber(data.savings),
+
+        // Loans
+        toReceive: toNumber(data.toReceive),
+
+        toPay: toNumber(data.toPay),
 
         recentTransactions: Array.isArray(data.recentTransactions)
           ? data.recentTransactions
@@ -369,7 +446,9 @@ const Dashboard = () => {
             SUMMARY CARDS
         ================================================= */}
 
-        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {/* TOTAL BALANCE */}
+
           <SummaryCard
             title="Total Balance"
             value={formatMoney(dashboardData.balance)}
@@ -378,6 +457,8 @@ const Dashboard = () => {
             iconBg="bg-violet-50"
             iconColor="text-violet-600"
           />
+
+          {/* MONTHLY EXPENSES */}
 
           <SummaryCard
             title="Monthly Expenses"
@@ -388,6 +469,8 @@ const Dashboard = () => {
             iconColor="text-red-500"
           />
 
+          {/* MONTHLY INCOME */}
+
           <SummaryCard
             title="Monthly Income"
             value={formatMoney(dashboardData.income)}
@@ -396,6 +479,8 @@ const Dashboard = () => {
             iconBg="bg-green-50"
             iconColor="text-green-600"
           />
+
+          {/* CREDIT AVAILABLE */}
 
           <SummaryCard
             title="Credit Available"
@@ -408,13 +493,26 @@ const Dashboard = () => {
             iconColor="text-amber-500"
           />
 
+          {/* TO RECEIVE */}
+
           <SummaryCard
-            title="Transactions"
-            value={dashboardData.recentTransactions?.length || 0}
-            subtitle="Recent transactions"
-            icon={<Receipt size={19} />}
+            title="To Receive"
+            value={formatMoney(dashboardData.toReceive)}
+            subtitle="Money lent"
+            icon={<HandCoins size={19} />}
             iconBg="bg-blue-50"
             iconColor="text-blue-600"
+          />
+
+          {/* TO PAY */}
+
+          <SummaryCard
+            title="To Pay"
+            value={formatMoney(dashboardData.toPay)}
+            subtitle="Money borrowed"
+            icon={<CircleDollarSign size={19} />}
+            iconBg="bg-orange-50"
+            iconColor="text-orange-600"
           />
         </div>
 
@@ -705,16 +803,22 @@ const Dashboard = () => {
                           const isCardPayment =
                             transaction.type === "CREDIT_CARD_PAYMENT";
 
+                          const isLoan = isLoanTransaction(transaction.type);
+
                           return (
                             <tr
                               key={transaction._id}
                               className="border-b border-gray-50 last:border-0"
                             >
+                              {/* DATE */}
+
                               <td className="whitespace-nowrap px-4 py-3 text-[10px] text-gray-500 sm:px-5 sm:text-xs">
                                 {formatDate(
                                   transaction.date || transaction.createdAt,
                                 )}
                               </td>
+
+                              {/* DESCRIPTION */}
 
                               <td className="max-w-[170px] px-2 py-3">
                                 <div className="flex items-center gap-2">
@@ -724,7 +828,9 @@ const Dashboard = () => {
                                         ? "bg-green-50 text-green-600"
                                         : isCardPayment
                                           ? "bg-blue-50 text-blue-600"
-                                          : "bg-red-50 text-red-500"
+                                          : isLoan
+                                            ? "bg-violet-50 text-violet-600"
+                                            : "bg-red-50 text-red-500"
                                     }`}
                                   >
                                     <TransactionIcon
@@ -733,21 +839,37 @@ const Dashboard = () => {
                                     />
                                   </span>
 
-                                  <span className="truncate text-xs font-medium text-gray-800">
-                                    {transaction.description || "Transaction"}
-                                  </span>
+                                  <div className="min-w-0">
+                                    <span className="block truncate text-xs font-medium text-gray-800">
+                                      {transaction.description || "Transaction"}
+                                    </span>
+
+                                    {isLoan && (
+                                      <span className="block truncate text-[9px] font-medium text-violet-500">
+                                        {getTransactionTypeLabel(
+                                          transaction.type,
+                                        )}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </td>
+
+                              {/* CATEGORY */}
 
                               <td className="px-2 py-3 text-xs text-gray-600">
                                 {transaction.categoryId?.name ||
                                   transaction.category?.name ||
-                                  "Other"}
+                                  (isLoan ? "Loan" : "Other")}
                               </td>
+
+                              {/* ACCOUNT */}
 
                               <td className="px-2 py-3 text-xs text-gray-600">
                                 {transaction.accountId?.name || "-"}
                               </td>
+
+                              {/* AMOUNT */}
 
                               <td
                                 className={`whitespace-nowrap px-4 py-3 text-right text-xs font-bold sm:px-5 ${
@@ -755,10 +877,18 @@ const Dashboard = () => {
                                     ? "text-green-600"
                                     : isCardPayment
                                       ? "text-blue-600"
-                                      : "text-red-600"
+                                      : isLoan
+                                        ? "text-violet-600"
+                                        : "text-red-600"
                                 }`}
                               >
-                                {isIncome ? "+" : isCardPayment ? "" : "-"}
+                                {isIncome
+                                  ? "+"
+                                  : isCardPayment
+                                    ? ""
+                                    : isLoan
+                                      ? ""
+                                      : "-"}
 
                                 {formatMoney(amount)}
                               </td>
@@ -782,18 +912,24 @@ const Dashboard = () => {
                       const isCardPayment =
                         transaction.type === "CREDIT_CARD_PAYMENT";
 
+                      const isLoan = isLoanTransaction(transaction.type);
+
                       return (
                         <div
                           key={transaction._id}
                           className="flex items-center gap-2.5 px-3 py-3"
                         >
+                          {/* ICON */}
+
                           <div
                             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
                               isIncome
                                 ? "bg-green-50 text-green-600"
                                 : isCardPayment
                                   ? "bg-blue-50 text-blue-600"
-                                  : "bg-red-50 text-red-500"
+                                  : isLoan
+                                    ? "bg-violet-50 text-violet-600"
+                                    : "bg-red-50 text-red-500"
                             }`}
                           >
                             <TransactionIcon
@@ -801,6 +937,8 @@ const Dashboard = () => {
                               size={16}
                             />
                           </div>
+
+                          {/* DETAILS */}
 
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-xs font-semibold text-gray-900">
@@ -810,9 +948,15 @@ const Dashboard = () => {
                             <p className="mt-0.5 truncate text-[10px] text-gray-500">
                               {transaction.categoryId?.name ||
                                 transaction.category?.name ||
-                                "Other"}{" "}
+                                (isLoan ? "Loan" : "Other")}{" "}
                               • {transaction.accountId?.name || "Account"}
                             </p>
+
+                            {isLoan && (
+                              <p className="mt-0.5 text-[9px] font-medium text-violet-500">
+                                {getTransactionTypeLabel(transaction.type)}
+                              </p>
+                            )}
 
                             <p className="mt-0.5 text-[9px] text-gray-400">
                               {formatDate(
@@ -821,16 +965,26 @@ const Dashboard = () => {
                             </p>
                           </div>
 
+                          {/* AMOUNT */}
+
                           <div
                             className={`shrink-0 text-right text-xs font-bold ${
                               isIncome
                                 ? "text-green-600"
                                 : isCardPayment
                                   ? "text-blue-600"
-                                  : "text-red-600"
+                                  : isLoan
+                                    ? "text-violet-600"
+                                    : "text-red-600"
                             }`}
                           >
-                            {isIncome ? "+" : isCardPayment ? "" : "-"}
+                            {isIncome
+                              ? "+"
+                              : isCardPayment
+                                ? ""
+                                : isLoan
+                                  ? ""
+                                  : "-"}
 
                             {formatMoney(amount)}
                           </div>

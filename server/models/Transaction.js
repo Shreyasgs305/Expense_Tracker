@@ -11,7 +11,18 @@ const transactionSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["EXPENSE", "INCOME", "TRANSFER", "CREDIT_CARD_PAYMENT"],
+      enum: [
+        "EXPENSE",
+        "INCOME",
+        "TRANSFER",
+        "CREDIT_CARD_PAYMENT",
+
+        // Loan transactions
+        "LOAN_GIVEN",
+        "LOAN_RECEIVED",
+        "LOAN_REPAYMENT_RECEIVED",
+        "LOAN_REPAYMENT_MADE",
+      ],
       required: true,
     },
 
@@ -19,6 +30,12 @@ const transactionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Account",
       required: true,
+    },
+    loanId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Loan",
+      default: null,
+      index: true,
     },
 
     categoryId: {
