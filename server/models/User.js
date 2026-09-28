@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
+    // =========================
+    // BASIC INFORMATION
+    // =========================
+
     name: {
       type: String,
       required: true,
@@ -16,10 +20,44 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // =========================
+    // LOCAL AUTHENTICATION
+    // =========================
+
     passwordHash: {
       type: String,
-      required: true,
+      default: null,
     },
+
+    // =========================
+    // GOOGLE AUTHENTICATION
+    // =========================
+
+    googleId: {
+      type: String,
+      default: null,
+      unique: true,
+      sparse: true,
+    },
+
+    authProvider: {
+      type: String,
+      enum: ["LOCAL", "GOOGLE"],
+      default: "LOCAL",
+    },
+
+    // =========================
+    // EMAIL VERIFICATION
+    // =========================
+
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    // =========================
+    // PROFILE
+    // =========================
 
     profileImage: {
       type: String,
@@ -29,17 +67,28 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       default: null,
+      trim: true,
     },
+
+    // =========================
+    // SETTINGS
+    // =========================
 
     currency: {
       type: String,
       default: "INR",
+      trim: true,
     },
 
     timezone: {
       type: String,
       default: "Asia/Kolkata",
+      trim: true,
     },
+
+    // =========================
+    // ACCOUNT STATUS
+    // =========================
 
     isActive: {
       type: Boolean,

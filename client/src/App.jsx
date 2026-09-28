@@ -1,8 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+// Public pages
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+
+// Protected route
 import ProtectedRoute from "./components/ProtectedRoute";
+
+// Protected pages
 import Dashboard from "./pages/Dashboard";
 import Accounts from "./pages/Accounts";
 import Categories from "./pages/Categories";
@@ -13,8 +20,8 @@ import Reports from "./pages/Reports";
 import Budgets from "./pages/Budgets";
 import Profile from "./pages/Profile";
 import ChangePassword from "./pages/ChangePassword";
-import Landing from "./pages/Landing";
 import Loans from "./pages/Loans";
+
 function App() {
   return (
     <BrowserRouter>
@@ -22,10 +29,15 @@ function App() {
         {/* ==================== */}
         {/* PUBLIC ROUTES         */}
         {/* ==================== */}
+
         <Route path="/" element={<Landing />} />
+
         <Route path="/login" element={<Login />} />
 
         <Route path="/register" element={<Register />} />
+
+        {/* Forgot Password */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* ==================== */}
         {/* PROTECTED ROUTES      */}
@@ -41,18 +53,19 @@ function App() {
           <Route path="/expenses/add" element={<AddExpense />} />
 
           <Route path="/categories" element={<Categories />} />
+
           <Route path="/credit-card-payment" element={<CreditCardPayment />} />
+
           <Route path="/budgets" element={<Budgets />} />
 
           <Route path="/reports" element={<Reports />} />
+
           <Route path="/profile" element={<Profile />} />
+
           <Route path="/change-password" element={<ChangePassword />} />
+
           <Route path="/loans" element={<Loans />} />
         </Route>
-
-        {/* ==================== */}
-        {/* DEFAULT ROUTE         */}
-        {/* ==================== */}
 
         {/* ==================== */}
         {/* UNKNOWN ROUTES        */}
