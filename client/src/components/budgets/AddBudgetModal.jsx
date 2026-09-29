@@ -17,7 +17,7 @@ const AddBudgetModal = ({
   const [alertPercentage, setAlertPercentage] = useState("80");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [error, setError] = useState("");
   // ==========================================
   // SET FORM DATA
   // ==========================================
@@ -59,22 +59,22 @@ const AddBudgetModal = ({
     e.preventDefault();
 
     if (!categoryId) {
-      alert("Please select a category");
+      setError("Please select a category");
       return;
     }
 
     if (!amount || Number(amount) <= 0) {
-      alert("Please enter a valid budget amount");
+      setError("Please enter a valid budget amount");
       return;
     }
 
     if (!month) {
-      alert("Please select a month");
+      setError("Please select a month");
       return;
     }
 
     if (Number(alertPercentage) < 1 || Number(alertPercentage) > 100) {
-      alert("Alert percentage must be between 1 and 100");
+      setError("Alert percentage must be between 1 and 100");
       return;
     }
 
@@ -231,7 +231,11 @@ const AddBudgetModal = ({
           </div>
 
           {/* BUTTONS */}
-
+          {error && (
+            <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
           <div className="flex gap-3 pt-2">
             <button
               type="button"

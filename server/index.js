@@ -4,12 +4,7 @@ const dotenv = require("dotenv");
 const dns = require("node:dns");
 
 dotenv.config();
-console.log("EMAIL_USER:", process.env.EMAIL_USER);
 
-console.log(
-  "EMAIL_APP_PASSWORD:",
-  process.env.EMAIL_APP_PASSWORD ? "Loaded" : "Missing",
-);
 // Use public DNS for MongoDB SRV lookup
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
@@ -31,7 +26,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173"],
     credentials: true,
   }),
 );
@@ -60,7 +55,7 @@ const startServer = async () => {
   try {
     await connectDb();
 
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server listening on port ${PORT}`);
     });
   } catch (error) {

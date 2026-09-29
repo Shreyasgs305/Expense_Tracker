@@ -244,11 +244,6 @@ const AddExpenseModal = ({ isOpen, onClose, onSuccess }) => {
         {/* Body */}
         <form onSubmit={handleSubmit} className="space-y-5 p-6">
           {/* Error */}
-          {error && (
-            <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-              {error}
-            </div>
-          )}
 
           {/* Loading */}
           {loadingData ? (
@@ -430,7 +425,11 @@ const AddExpenseModal = ({ isOpen, onClose, onSuccess }) => {
                   className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
                 />
               </div>
-
+              {error && (
+                <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+                  {error}
+                </div>
+              )}
               {/* Buttons */}
               <div className="flex justify-end gap-3 border-t pt-5">
                 <button
