@@ -35,12 +35,10 @@ const Categories = () => {
 
   // Edit
   const [showEditModal, setShowEditModal] = useState(false);
-
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   // Delete
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-
   const [categoryToDelete, setCategoryToDelete] = useState(null);
 
   // Menu
@@ -101,6 +99,8 @@ const Categories = () => {
 
   const handleCategoryAdded = (newCategory) => {
     setCategories((prevCategories) => [newCategory, ...prevCategories]);
+
+    setShowAddModal(false);
   };
 
   // ======================================================
@@ -108,9 +108,9 @@ const Categories = () => {
   // ======================================================
 
   const handleEdit = (category) => {
+    setOpenMenu(null);
     setSelectedCategory(category);
     setShowEditModal(true);
-    setOpenMenu(null);
   };
 
   const handleCategoryUpdated = (updatedCategory) => {
@@ -129,9 +129,9 @@ const Categories = () => {
   // ======================================================
 
   const handleDelete = (category) => {
+    setOpenMenu(null);
     setCategoryToDelete(category);
     setShowDeleteModal(true);
-    setOpenMenu(null);
   };
 
   const handleCategoryDeleted = (categoryId) => {
@@ -201,7 +201,11 @@ const Categories = () => {
       title="Categories"
       subtitle="Manage your income and expense categories"
     >
-      <div className="mx-auto w-full max-w-[1400px] space-y-3 overflow-hidden sm:space-y-4 lg:space-y-5">
+      {/* IMPORTANT:
+          No overflow-hidden here.
+          This allows the Edit/Delete dropdown to appear outside.
+      */}
+      <div className="mx-auto w-full max-w-[1400px] space-y-3 sm:space-y-4 lg:space-y-5">
         {/* ==================================================
             HEADER
         ================================================== */}
@@ -232,16 +236,12 @@ const Categories = () => {
         ================================================== */}
 
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-          {/* TOTAL */}
-
           <SummaryCard
             title="Total Categories"
             value={categories.length}
             icon={<Tags size={18} />}
             iconClass="bg-violet-50 text-violet-600"
           />
-
-          {/* EXPENSE */}
 
           <SummaryCard
             title="Expense Categories"
@@ -250,16 +250,12 @@ const Categories = () => {
             iconClass="bg-red-50 text-red-600"
           />
 
-          {/* INCOME */}
-
           <SummaryCard
             title="Income Categories"
             value={incomeCategories.length}
             icon={<ArrowDownLeft size={18} />}
             iconClass="bg-emerald-50 text-emerald-600"
           />
-
-          {/* DEFAULT */}
 
           <SummaryCard
             title="Default Categories"
@@ -329,7 +325,7 @@ const Categories = () => {
               </div>
 
               {/* ==================================================
-                  CATEGORY GRID
+                  CATEGORY LIST
               ================================================== */}
 
               <div className="divide-y divide-slate-100">
@@ -341,7 +337,7 @@ const Categories = () => {
                   return (
                     <div
                       key={category._id}
-                      className="flex min-h-[58px] items-center gap-2.5 px-3 py-2 sm:min-h-[64px] sm:gap-3 sm:px-5 sm:py-2.5"
+                      className="relative flex min-h-[58px] items-center gap-2.5 px-3 py-2 sm:min-h-[64px] sm:gap-3 sm:px-5 sm:py-2.5"
                     >
                       {/* ICON */}
 
@@ -377,8 +373,7 @@ const Categories = () => {
                         {isExpense ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-[9px] font-semibold text-red-600 sm:px-2.5 sm:text-xs">
                             <ArrowUpRight size={11} />
-                            <span className="hidden xs:inline">Expense</span>
-                            <span className="xs:hidden">Expense</span>
+                            <span>Expense</span>
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-semibold text-emerald-600 sm:px-2.5 sm:text-xs">
@@ -388,9 +383,11 @@ const Categories = () => {
                         )}
                       </div>
 
-                      {/* MENU */}
+                      {/* ==================================================
+                          MENU
+                      ================================================== */}
 
-                      <div className="relative shrink-0">
+                      <div className="relative z-40 shrink-0">
                         <button
                           type="button"
                           onClick={() =>
@@ -406,20 +403,39 @@ const Categories = () => {
                         </button>
 
                         {openMenu === category._id && (
-                          <div className="absolute right-0 top-8 z-30 w-28 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                          <div
+                            className="
+                              absolute
+                              right-0
+                              top-full
+                              z-[9999]
+                              mt-1
+                              w-32
+                              rounded-lg
+                              border
+                              border-slate-200
+                              bg-white
+                              py-1
+                              shadow-xl
+                            "
+                          >
+                            {/* EDIT */}
+
                             <button
                               type="button"
                               onClick={() => handleEdit(category)}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-xs text-blue-600 hover:bg-blue-50"
+                              className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-medium text-blue-600 transition hover:bg-blue-50 sm:text-sm"
                             >
                               <Pencil size={14} />
                               Edit
                             </button>
 
+                            {/* DELETE */}
+
                             <button
                               type="button"
                               onClick={() => handleDelete(category)}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-600 hover:bg-red-50"
+                              className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-medium text-red-600 transition hover:bg-red-50 sm:text-sm"
                             >
                               <Trash2 size={14} />
                               Delete
@@ -455,7 +471,6 @@ const Categories = () => {
             category={selectedCategory}
             onClose={() => {
               setShowEditModal(false);
-
               setSelectedCategory(null);
             }}
             onSuccess={handleCategoryUpdated}
@@ -471,7 +486,6 @@ const Categories = () => {
             category={categoryToDelete}
             onClose={() => {
               setShowDeleteModal(false);
-
               setCategoryToDelete(null);
             }}
             onSuccess={handleCategoryDeleted}
@@ -506,128 +520,6 @@ const SummaryCard = ({ title, value, icon, iconClass }) => {
           {icon}
         </div>
       </div>
-    </div>
-  );
-};
-
-// ======================================================
-// CATEGORY CARD
-// ======================================================
-
-const CategoryCard = ({
-  category,
-  openMenu,
-  setOpenMenu,
-  handleEdit,
-  handleDelete,
-}) => {
-  const isExpense = category.type === "EXPENSE";
-
-  const categoryColor = category.color || "#8b5cf6";
-
-  return (
-    <div className="group relative min-w-0 rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:rounded-2xl sm:p-4 lg:p-5">
-      {/* ==================================================
-          TOP
-      ================================================== */}
-
-      <div className="flex items-start justify-between gap-2">
-        {/* ICON */}
-
-        <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl sm:h-12 sm:w-12 sm:text-2xl"
-          style={{
-            backgroundColor: `${categoryColor}15`,
-            color: categoryColor,
-          }}
-        >
-          {category.icon || "🏷️"}
-        </div>
-
-        {/* MENU */}
-
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() =>
-              setOpenMenu(openMenu === category._id ? null : category._id)
-            }
-            title="More options"
-            aria-label="More category options"
-            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 sm:p-2"
-          >
-            <MoreVertical size={17} />
-          </button>
-
-          {/* MENU */}
-
-          {openMenu === category._id && (
-            <div className="absolute right-0 top-8 z-30 w-28 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg sm:top-10 sm:w-32">
-              {/* EDIT */}
-
-              <button
-                type="button"
-                onClick={() => handleEdit(category)}
-                title="Edit"
-                className="flex w-full items-center justify-center gap-2 px-3 py-2 text-xs text-blue-600 transition hover:bg-blue-50 sm:py-2.5 sm:text-sm"
-              >
-                <Pencil size={14} />
-                Edit
-              </button>
-
-              {/* DELETE */}
-
-              <button
-                type="button"
-                onClick={() => handleDelete(category)}
-                title="Delete"
-                className="flex w-full items-center justify-center gap-2 px-3 py-2 text-xs text-red-600 transition hover:bg-red-50 sm:py-2.5 sm:text-sm"
-              >
-                <Trash2 size={14} />
-                Delete
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ==================================================
-          CATEGORY INFO
-      ================================================== */}
-
-      <div className="mt-3 min-w-0 sm:mt-4">
-        <h3 className="truncate text-sm font-semibold text-slate-900 sm:text-base">
-          {category.name}
-        </h3>
-
-        {/* TYPE */}
-
-        <div className="mt-1.5 sm:mt-2">
-          {isExpense ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-[9px] font-semibold text-red-600 sm:px-2.5 sm:text-xs">
-              <ArrowUpRight size={11} />
-              Expense
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-semibold text-emerald-600 sm:px-2.5 sm:text-xs">
-              <ArrowDownLeft size={11} />
-              Income
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* ==================================================
-          DEFAULT
-      ================================================== */}
-
-      {category.isDefault && (
-        <div className="mt-3 border-t border-slate-100 pt-2.5 sm:mt-4 sm:pt-3">
-          <span className="text-[9px] font-medium text-slate-400 sm:text-xs">
-            Default category
-          </span>
-        </div>
-      )}
     </div>
   );
 };

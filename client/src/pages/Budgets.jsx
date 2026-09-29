@@ -15,6 +15,7 @@ import {
   CalendarDays,
   Target,
   Lightbulb,
+  Loader2,
 } from "lucide-react";
 
 import {
@@ -135,7 +136,10 @@ const Budgets = () => {
 
   const [editingBudget, setEditingBudget] = useState(null);
 
+  // Delete
   const [deletingId, setDeletingId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [budgetToDelete, setBudgetToDelete] = useState(null);
 
   // ====================================================
   // LOAD DATA
@@ -147,7 +151,6 @@ const Budgets = () => {
       setError("");
 
       const year = Number(selectedMonth.split("-")[0]);
-
       const month = Number(selectedMonth.split("-")[1]);
 
       const [budgetResponse, categoryResponse, expenseResponse] =
@@ -226,7 +229,6 @@ const Budgets = () => {
   const overBudgetItems = useMemo(() => {
     return budgets.filter((budget) => {
       const amount = getNumber(budget.amount);
-
       const spent = getNumber(budget.spent);
 
       return amount > 0 && spent > amount;
@@ -247,7 +249,6 @@ const Budgets = () => {
 
   const getBudgetPercentage = (budget) => {
     const amount = getNumber(budget.amount);
-
     const spent = getNumber(budget.spent);
 
     if (amount <= 0) {
@@ -402,19 +403,37 @@ const Budgets = () => {
     }
   };
 
-  const handleDeleteBudget = async (id) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this budget?",
-    );
+  // ====================================================
+  // DELETE BUDGET
+  // ====================================================
 
-    if (!confirmed) {
+  const handleDeleteBudget = (budget) => {
+    setBudgetToDelete(budget);
+    setShowDeleteModal(true);
+  };
+
+  const closeDeleteModal = () => {
+    if (deletingId) {
+      return;
+    }
+
+    setShowDeleteModal(false);
+    setBudgetToDelete(null);
+  };
+
+  const confirmDeleteBudget = async () => {
+    if (!budgetToDelete?._id) {
       return;
     }
 
     try {
-      setDeletingId(id);
+      setDeletingId(budgetToDelete._id);
+      setError("");
 
-      await deleteBudget(id);
+      await deleteBudget(budgetToDelete._id);
+
+      setShowDeleteModal(false);
+      setBudgetToDelete(null);
 
       await loadData();
     } catch (err) {
@@ -448,7 +467,7 @@ const Budgets = () => {
       title="Budgets"
       subtitle="Plan your spending and track your budget"
     >
-      <div className="mx-auto w-full max-w-[1400px] space-y-3 overflow-hidden sm:space-y-4 lg:space-y-5">
+      <div className="mx-auto w-full max-w-[1400px] space-y-3 sm:space-y-4 lg:space-y-5">
         {/* ==================================================
             TOP ACTIONS
         ================================================== */}
@@ -495,8 +514,6 @@ const Budgets = () => {
         ================================================== */}
 
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
-          {/* TOTAL BUDGET */}
-
           <SummaryCard
             title="Total Budget"
             value={formatCurrency(totalBudget)}
@@ -506,8 +523,6 @@ const Budgets = () => {
             subtitleClass="text-blue-600"
           />
 
-          {/* SPENT */}
-
           <SummaryCard
             title="Total Spent"
             value={formatCurrency(totalSpent)}
@@ -516,8 +531,6 @@ const Budgets = () => {
             iconClass="bg-emerald-50 text-emerald-600"
             subtitleClass="text-emerald-600"
           />
-
-          {/* REMAINING */}
 
           <SummaryCard
             title="Remaining"
@@ -529,8 +542,6 @@ const Budgets = () => {
             iconClass="bg-amber-50 text-amber-500"
             subtitleClass="text-amber-600"
           />
-
-          {/* OVER BUDGET */}
 
           <SummaryCard
             title="Over Budget"
@@ -570,13 +581,9 @@ const Budgets = () => {
               ================================================= */}
 
               <div className="min-w-0 space-y-3 sm:space-y-4 lg:space-y-5">
-                {/* ==================================================
-                    BUDGET OVERVIEW
-                ================================================== */}
+                {/* BUDGET OVERVIEW */}
 
                 <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:rounded-2xl">
-                  {/* HEADER */}
-
                   <div className="flex items-center justify-between border-b border-slate-100 px-3 py-3 sm:px-5 sm:py-4">
                     <div className="min-w-0">
                       <h2 className="text-sm font-bold text-slate-900 sm:text-base">
@@ -594,9 +601,8 @@ const Budgets = () => {
                       className="flex shrink-0 items-center gap-1 text-[11px] font-semibold text-purple-600 sm:gap-1.5 sm:text-sm"
                     >
                       <Plus size={14} />
-                      <span className="hidden xs:inline sm:inline">
-                        Add Budget
-                      </span>
+
+                      <span className="hidden sm:inline">Add Budget</span>
                     </button>
                   </div>
 
@@ -628,7 +634,7 @@ const Budgets = () => {
                   ) : (
                     <>
                       {/* ==================================================
-                          MOBILE CARDS
+                          MOBILE
                       ================================================== */}
 
                       <div className="divide-y divide-slate-100 sm:hidden">
@@ -735,7 +741,7 @@ const Budgets = () => {
 
                                 <button
                                   type="button"
-                                  onClick={() => handleDeleteBudget(budget._id)}
+                                  onClick={() => handleDeleteBudget(budget)}
                                   disabled={deletingId === budget._id}
                                   title="Delete"
                                   aria-label="Delete budget"
@@ -786,7 +792,7 @@ const Budgets = () => {
                       </div>
 
                       {/* ==================================================
-                          TABLE - TABLET + DESKTOP
+                          DESKTOP TABLE
                       ================================================== */}
 
                       <div className="hidden overflow-x-auto sm:block">
@@ -936,7 +942,7 @@ const Budgets = () => {
                                       <button
                                         type="button"
                                         onClick={() =>
-                                          handleDeleteBudget(budget._id)
+                                          handleDeleteBudget(budget)
                                         }
                                         disabled={deletingId === budget._id}
                                         title="Delete"
@@ -1089,9 +1095,7 @@ const Budgets = () => {
               ================================================= */}
 
               <div className="min-w-0 space-y-3 sm:space-y-4 lg:space-y-5">
-                {/* ==================================================
-                    BUDGET VS ACTUAL
-                ================================================== */}
+                {/* BUDGET VS ACTUAL */}
 
                 <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
                   <h2 className="text-sm font-bold text-slate-900 sm:text-base">
@@ -1117,7 +1121,6 @@ const Budgets = () => {
                             paddingAngle={2}
                           >
                             <Cell fill="#6D28D9" />
-
                             <Cell fill="#10B981" />
                           </Pie>
 
@@ -1149,9 +1152,7 @@ const Budgets = () => {
                   </div>
                 </div>
 
-                {/* ==================================================
-                    TOP BUDGET USAGE
-                ================================================== */}
+                {/* TOP BUDGET USAGE */}
 
                 <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
                   <h2 className="text-sm font-bold text-slate-900 sm:text-base">
@@ -1196,9 +1197,7 @@ const Budgets = () => {
                   </div>
                 </div>
 
-                {/* ==================================================
-                    TIPS
-                ================================================== */}
+                {/* TIPS */}
 
                 <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 sm:rounded-2xl sm:p-5">
                   <div className="flex items-start gap-2.5 sm:gap-3">
@@ -1222,9 +1221,7 @@ const Budgets = () => {
                   </div>
                 </div>
 
-                {/* ==================================================
-                    QUICK ACTION
-                ================================================== */}
+                {/* QUICK ACTION */}
 
                 <button
                   type="button"
@@ -1240,7 +1237,7 @@ const Budgets = () => {
         )}
 
         {/* ==================================================
-            MODAL
+            ADD / EDIT BUDGET MODAL
         ================================================== */}
 
         {showModal && (
@@ -1256,6 +1253,103 @@ const Budgets = () => {
               (category) => category.type === "EXPENSE",
             )}
           />
+        )}
+
+        {/* ==================================================
+            DELETE BUDGET MODAL
+        ================================================== */}
+
+        {showDeleteModal && budgetToDelete && (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm"
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                closeDeleteModal();
+              }
+            }}
+          >
+            <div
+              className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl sm:p-6"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              {/* HEADER */}
+
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 sm:h-12 sm:w-12">
+                  <Trash2 size={21} />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-base font-bold text-slate-900 sm:text-lg">
+                    Delete Budget?
+                  </h2>
+
+                  <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
+                    Are you sure you want to delete this budget? This action
+                    cannot be undone.
+                  </p>
+                </div>
+              </div>
+
+              {/* BUDGET INFO */}
+
+              <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                      Category
+                    </p>
+
+                    <p className="mt-1 truncate text-sm font-semibold text-slate-800">
+                      {getCategoryName(budgetToDelete)}
+                    </p>
+                  </div>
+
+                  <div className="shrink-0 text-right">
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                      Budget
+                    </p>
+
+                    <p className="mt-1 text-sm font-bold text-slate-900">
+                      {formatCurrency(budgetToDelete.amount)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ACTIONS */}
+
+              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={closeDeleteModal}
+                  disabled={!!deletingId}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  onClick={confirmDeleteBudget}
+                  disabled={!!deletingId}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:text-sm"
+                >
+                  {deletingId ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={15} />
+                      Delete Budget
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </PageLayout>

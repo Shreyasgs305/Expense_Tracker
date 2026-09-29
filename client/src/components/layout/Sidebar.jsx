@@ -34,11 +34,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       path: "/expenses",
       icon: Receipt,
     },
-    {
-      name: "Add Expense",
-      path: "/expenses/add",
-      icon: PlusCircle,
-    },
+
     {
       name: "Categories",
       path: "/categories",
