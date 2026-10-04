@@ -220,7 +220,6 @@ const AddExpenseModal = ({ isOpen, onClose, onSuccess }) => {
       navigate("/expenses");
 
       // Refresh Expenses page so the new transaction appears
-      window.location.reload();
     } catch (err) {
       console.error("Create expense error:", err);
 
