@@ -275,107 +275,132 @@ const Register = () => {
 
           {otpSent ? (
             <>
-              <div className="mb-8">
+              {/* =====================================================
+        OTP SCREEN
+    ====================================================== */}
+
+              <div className="w-full">
+                {/* Back Button */}
                 <button
                   type="button"
                   onClick={handleBackToRegister}
-                  className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-500 transition hover:text-gray-800"
+                  className="mb-5 flex items-center gap-2 text-sm font-medium text-gray-500 transition hover:text-gray-800"
                 >
                   <ArrowLeft size={16} />
-                  Back
+                  <span>Back</span>
                 </button>
 
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100">
-                  <KeyRound size={24} className="text-violet-600" />
-                </div>
-
-                <p className="mb-2 text-sm font-semibold text-violet-600">
-                  Email verification
-                </p>
-
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-                  Verify your email
-                </h1>
-
-                <p className="mt-3 text-sm leading-6 text-gray-500">
-                  We sent a 6-digit OTP to
-                </p>
-
-                <p className="mt-1 text-sm font-semibold text-gray-900">
-                  {email}
-                </p>
-
-                <p className="mt-2 text-xs text-gray-400">
-                  The OTP is valid for 10 minutes.
-                </p>
-              </div>
-
-              {/* Error */}
-
-              {error && (
-                <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-                  {error}
-                </div>
-              )}
-
-              {/* Success */}
-
-              {success && (
-                <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-600">
-                  {success}
-                </div>
-              )}
-
-              {/* OTP Form */}
-
-              <form onSubmit={handleVerifyOtp} className="space-y-5">
-                <div>
-                  <label
-                    htmlFor="otp"
-                    className="mb-2 block text-sm font-semibold text-gray-700"
-                  >
-                    Verification OTP
-                  </label>
-
-                  <div className="relative">
+                {/* OTP Header */}
+                <div className="mb-6 sm:mb-8">
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-violet-100 sm:h-12 sm:w-12">
                     <KeyRound
-                      size={19}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-
-                    <input
-                      id="otp"
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      placeholder="Enter 6-digit OTP"
-                      value={otp}
-                      onChange={(e) =>
-                        setOtp(e.target.value.replace(/\D/g, ""))
-                      }
-                      className="h-12 w-full rounded-xl border border-gray-200 bg-white pl-11 pr-4 text-center text-lg font-semibold tracking-[0.4em] text-gray-900 outline-none transition placeholder:text-sm placeholder:font-normal placeholder:tracking-normal placeholder:text-gray-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
+                      size={22}
+                      className="text-violet-600 sm:h-6 sm:w-6"
                     />
                   </div>
+
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-violet-600 sm:text-sm">
+                    Email verification
+                  </p>
+
+                  <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+                    Verify your email
+                  </h1>
+
+                  <p className="mt-2 text-sm leading-6 text-gray-500 sm:mt-3">
+                    We sent a 6-digit OTP to
+                  </p>
+
+                  {/* Email */}
+                  <p className="mt-1 break-all text-sm font-semibold text-gray-900">
+                    {email}
+                  </p>
+
+                  <p className="mt-2 text-xs leading-5 text-gray-400">
+                    The OTP is valid for 10 minutes.
+                  </p>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 transition hover:from-violet-700 hover:to-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
+                {/* Error */}
+                {error && (
+                  <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-sm font-medium leading-5 text-red-600 sm:mb-6 sm:px-4">
+                    {error}
+                  </div>
+                )}
+
+                {/* Success */}
+                {success && (
+                  <div className="mb-5 rounded-xl border border-green-200 bg-green-50 px-3 py-3 text-sm font-medium leading-5 text-green-600 sm:mb-6 sm:px-4">
+                    {success}
+                  </div>
+                )}
+
+                {/* OTP Form */}
+                <form
+                  onSubmit={handleVerifyOtp}
+                  className="space-y-5 sm:space-y-6"
                 >
-                  {loading ? (
-                    "Verifying..."
-                  ) : (
-                    <>
-                      Verify & Create Account
-                      <ArrowRight
+                  <div>
+                    <label
+                      htmlFor="otp"
+                      className="mb-2 block text-sm font-semibold text-gray-700"
+                    >
+                      Verification OTP
+                    </label>
+
+                    <div className="relative">
+                      <KeyRound
                         size={18}
-                        className="transition-transform group-hover:translate-x-1"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 sm:left-4"
                       />
-                    </>
-                  )}
-                </button>
-              </form>
+
+                      <input
+                        id="otp"
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        autoComplete="one-time-code"
+                        placeholder="Enter 6-digit OTP"
+                        value={otp}
+                        onChange={(e) =>
+                          setOtp(e.target.value.replace(/\D/g, ""))
+                        }
+                        className="h-12 w-full rounded-xl border border-gray-200 bg-white pl-10 pr-3 text-center text-base font-semibold tracking-[0.25em] text-gray-900 outline-none transition placeholder:text-xs placeholder:font-normal placeholder:tracking-normal placeholder:text-gray-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 sm:h-13 sm:pl-11 sm:pr-4 sm:text-lg sm:tracking-[0.4em]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Verify Button */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-4 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 transition hover:from-violet-700 hover:to-purple-700 disabled:cursor-not-allowed disabled:opacity-60 sm:h-13"
+                  >
+                    {loading ? (
+                      <span>Verifying...</span>
+                    ) : (
+                      <>
+                        <span className="truncate">
+                          Verify & Create Account
+                        </span>
+
+                        <ArrowRight
+                          size={18}
+                          className="shrink-0 transition-transform group-hover:translate-x-1"
+                        />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {/* Mobile Help Text */}
+                <div className="mt-6 rounded-xl bg-gray-50 px-3 py-3 text-center sm:px-4">
+                  <p className="text-xs leading-5 text-gray-500">
+                    Didn't receive the OTP? Check your spam folder or go back
+                    and request a new OTP.
+                  </p>
+                </div>
+              </div>
             </>
           ) : (
             <>

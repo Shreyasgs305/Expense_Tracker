@@ -136,9 +136,9 @@ const ForgotPassword = () => {
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center shadow-lg">
+            <span className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center shadow-lg">
               <Wallet size={21} className="text-white" />
-            </div>
+            </span>
 
             <span className="text-xl font-bold text-gray-900">
               Expense Tracker

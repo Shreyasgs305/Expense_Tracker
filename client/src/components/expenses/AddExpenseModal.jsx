@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { createExpense } from "../../api/expenseApi";
 import { getAccounts } from "../../api/accountApi";
 import { getCategories } from "../../api/categoryApi";
 
 const AddExpenseModal = ({ isOpen, onClose, onSuccess }) => {
+  const navigate = useNavigate();
+
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
 
@@ -23,7 +26,24 @@ const AddExpenseModal = ({ isOpen, onClose, onSuccess }) => {
     paymentMethod: "UPI",
     notes: "",
   });
+  const toNumber = (value) => {
+    if (value === null || value === undefined) return 0;
 
+    if (typeof value === "number") return value;
+
+    if (value?.$numberDecimal !== undefined) {
+      return Number(value.$numberDecimal);
+    }
+
+    return Number(value);
+  };
+  const formatMoney = (value, currency = "INR") => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+    }).format(toNumber(value));
+  };
   // =========================================================
   // LOAD ACCOUNTS AND CATEGORIES
   // =========================================================
@@ -161,37 +181,46 @@ const AddExpenseModal = ({ isOpen, onClose, onSuccess }) => {
 
       const data = {
         amount: Number(formData.amount),
-
         type: formData.type,
-
         category: formData.category,
-
         account: formData.account,
-
         date: formData.date,
-
         description: formData.description.trim(),
-
         paymentMethod: formData.paymentMethod,
-
         notes: formData.notes.trim() || undefined,
       };
 
       const response = await createExpense(data);
 
-      // Controller returns:
-      // { success: true, message: "...", data: transaction }
+      // -----------------------------
+      // API ERROR
+      // -----------------------------
 
       if (response.success === false) {
         setError(response.message || "Failed to create expense");
         return;
       }
 
-      onSuccess(response.data);
+      // -----------------------------
+      // SUCCESS
+      // -----------------------------
 
+      // Reset modal form
       resetForm();
 
+      // Close modal
       onClose();
+
+      // Notify parent if provided
+      if (onSuccess) {
+        onSuccess(response.data);
+      }
+
+      // Navigate to Expenses page
+      navigate("/expenses");
+
+      // Refresh Expenses page so the new transaction appears
+      window.location.reload();
     } catch (err) {
       console.error("Create expense error:", err);
 
@@ -208,6 +237,10 @@ const AddExpenseModal = ({ isOpen, onClose, onSuccess }) => {
   const filteredCategories = categories.filter(
     (category) => category.type === formData.type,
   );
+
+  // =========================================================
+  // DON'T RENDER WHEN CLOSED
+  // =========================================================
 
   if (!isOpen) {
     return null;
@@ -235,7 +268,8 @@ const AddExpenseModal = ({ isOpen, onClose, onSuccess }) => {
           <button
             type="button"
             onClick={handleClose}
-            className="text-2xl text-gray-400 hover:text-gray-700"
+            disabled={saving}
+            className="text-2xl text-gray-400 hover:text-gray-700 disabled:opacity-50"
           >
             ×
           </button>
@@ -243,8 +277,6 @@ const AddExpenseModal = ({ isOpen, onClose, onSuccess }) => {
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="space-y-5 p-6">
-          {/* Error */}
-
           {/* Loading */}
           {loadingData ? (
             <div className="py-8 text-center text-gray-500">
@@ -331,7 +363,8 @@ const AddExpenseModal = ({ isOpen, onClose, onSuccess }) => {
 
                   {accounts.map((account) => (
                     <option key={account._id} value={account._id}>
-                      {account.name}
+                      {account.name} •{" "}
+                      {formatMoney(account.balance, account.currency || "INR")}
                     </option>
                   ))}
                 </select>
@@ -425,11 +458,14 @@ const AddExpenseModal = ({ isOpen, onClose, onSuccess }) => {
                   className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
                 />
               </div>
+
+              {/* Error */}
               {error && (
                 <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
                   {error}
                 </div>
               )}
+
               {/* Buttons */}
               <div className="flex justify-end gap-3 border-t pt-5">
                 <button
