@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./context/useAuth";
 
 // Public pages
 import Landing from "./pages/Landing";
@@ -22,6 +23,31 @@ import Profile from "./pages/Profile";
 import ChangePassword from "./pages/ChangePassword";
 import Loans from "./pages/Loans";
 
+// ===============================
+// PUBLIC ROUTE
+// ===============================
+const PublicRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600 text-lg">Loading...</p>
+      </div>
+    );
+  }
+
+  // Already logged in
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
+// ===============================
+// APP
+// ===============================
 function App() {
   return (
     <BrowserRouter>
@@ -30,14 +56,41 @@ function App() {
         {/* PUBLIC ROUTES         */}
         {/* ==================== */}
 
-        <Route path="/" element={<Landing />} />
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <Landing />
+            </PublicRoute>
+          }
+        />
 
-        <Route path="/login" element={<Login />} />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
 
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
 
-        {/* Forgot Password */}
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route
+          path="/forgot-password"
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          }
+        />
 
         {/* ==================== */}
         {/* PROTECTED ROUTES      */}

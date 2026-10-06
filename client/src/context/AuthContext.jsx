@@ -12,7 +12,9 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // ==========================================
   // CHECK LOGGED-IN USER
+  // ==========================================
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -29,8 +31,12 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error("Get current user error:", error);
 
-        localStorage.removeItem("token");
-        setUser(null);
+        // Remove token only when authentication
+        // is actually invalid/expired.
+        if (error.response?.status === 401) {
+          localStorage.removeItem("token");
+          setUser(null);
+        }
       } finally {
         setLoading(false);
       }
@@ -39,7 +45,9 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
+  // ==========================================
   // LOGIN
+  // ==========================================
   const login = async (email, password) => {
     const response = await loginApi({
       email,
@@ -48,8 +56,10 @@ export const AuthProvider = ({ children }) => {
 
     console.log("LOGIN RESPONSE:", response);
 
+    // Save JWT
     localStorage.setItem("token", response.token);
 
+    // Get current user
     const userResponse = await getMe();
 
     console.log("ME RESPONSE:", userResponse);
@@ -59,14 +69,18 @@ export const AuthProvider = ({ children }) => {
     return response;
   };
 
+  // ==========================================
   // REGISTER
+  // ==========================================
   const register = async (data) => {
     const response = await registerApi(data);
 
     return response;
   };
 
+  // ==========================================
   // LOGOUT
+  // ==========================================
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
