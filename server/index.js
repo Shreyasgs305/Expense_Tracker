@@ -27,13 +27,15 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "https://expense-tracker-six-beta-48.vercel.app",
+  "https://myexpensestracker.in",
+  "https://www.myexpensestracker.in",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests without an origin
-      // such as Postman/server-to-server requests
+      // Allow requests without an Origin header
+      // (Postman, server-to-server requests, etc.)
       if (!origin) {
         return callback(null, true);
       }
@@ -41,6 +43,8 @@ app.use(
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
+
+      console.log("Blocked CORS origin:", origin);
 
       return callback(new Error("Not allowed by CORS"));
     },
