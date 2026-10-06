@@ -2,7 +2,7 @@ const { Resend } = require("resend");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = "ExpenseTracker <onboarding@resend.dev>";
+const FROM_EMAIL = "Expense Tracker <noreply@myexpensestracker.in>";
 
 const sendVerificationOtp = async (email, otp) => {
   try {
