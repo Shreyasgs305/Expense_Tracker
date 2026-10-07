@@ -3,31 +3,34 @@
   <head>
     <meta charset="UTF-8" />
 
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="/myexpense.png" />
     <link rel="apple-touch-icon" href="/myexpense.png" />
 
+    <!-- Mobile -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- Primary SEO -->
     <title>Expense Tracker | Track Expenses, Budgets & Personal Finances</title>
 
     <meta
       name="description"
-      content="Expense Tracker helps you track expenses, manage budgets, monitor accounts, analyze spending, and take control of your personal finances in one place."
+      content="Track expenses, manage budgets, monitor accounts, analyze spending, and take control of your personal finances with Expense Tracker."
     />
-
-    <meta
-      name="keywords"
-      content="expense tracker, personal finance tracker, budget tracker, expense management, money management, income tracker, spending tracker, personal budget, finance management"
-    />
-
-    <meta name="author" content="ExpenseTracker" />
 
     <meta name="robots" content="index, follow" />
 
+    <meta name="author" content="Expense Tracker" />
+
     <meta name="theme-color" content="#7c3aed" />
 
-    <!-- Open Graph -->
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://myexpensestracker.in/" />
+
+    <!-- Open Graph / Facebook / WhatsApp / LinkedIn -->
     <meta property="og:type" content="website" />
+
+    <meta property="og:url" content="https://myexpensestracker.in/" />
 
     <meta
       property="og:title"
@@ -39,9 +42,12 @@
       content="Track expenses, manage budgets, monitor accounts, and understand your spending with Expense Tracker."
     />
 
-    <meta property="og:image" content="/myexpense.png" />
+    <meta
+      property="og:image"
+      content="https://myexpensestracker.in/myexpense.png"
+    />
 
-    <meta property="og:site_name" content="ExpenseTracker" />
+    <meta property="og:site_name" content="Expense Tracker" />
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -56,38 +62,49 @@
       content="Track expenses, manage budgets, monitor accounts, and understand your spending with Expense Tracker."
     />
 
-    <meta name="twitter:image" content="/myexpense.png" />
+    <meta
+      name="twitter:image"
+      content="https://myexpensestracker.in/myexpense.png"
+    />
+
+    <meta name="twitter:image:alt" content="Expense Tracker logo" />
 
     <!-- Web Application -->
-    <meta name="application-name" content="ExpenseTracker" />
+    <meta name="application-name" content="Expense Tracker" />
 
     <!-- Structured Data -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "WebApplication",
-        "name": "ExpenseTracker",
+        "name": "Expense Tracker",
+        "url": "https://myexpensestracker.in/",
         "description": "A personal finance application for tracking expenses, managing budgets, monitoring accounts, and analyzing spending.",
         "applicationCategory": "FinanceApplication",
         "operatingSystem": "Web",
         "browserRequirements": "Requires JavaScript"
       }
     </script>
-  </head>
-  <!-- Google tag (gtag.js) -->
-  <script
-    async
-    src="https://www.googletagmanager.com/gtag/js?id=G-R9L5CC89V6"
-  ></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-    gtag("js", new Date());
 
-    gtag("config", "G-R9L5CC89V6");
-  </script>
+    <!-- Google Analytics 4 -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-R9L5CC89V6"
+    ></script>
+
+    <script>
+      window.dataLayer = window.dataLayer || [];
+
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+
+      gtag("js", new Date());
+
+      gtag("config", "G-R9L5CC89V6");
+    </script>
+  </head>
+
   <body>
     <div id="root"></div>
 
